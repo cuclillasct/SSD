@@ -7,6 +7,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -17,15 +22,17 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.Timer;
 
-import Controllers.Client;
+import Interfaces.IFuturo;
+import Interfaces.IObservadorFuturo;
 import Controllers.Server;
+import Controllers.ServerProxy;
 import Controllers.TextAreaOutputStream;
+import Interfaces.IProxy;
+import Models.FileList;
 
-public class MainWindow extends JFrame {
+public class Client extends JFrame implements IObservadorFuturo{
 
 	
 	public static final String [] 
@@ -41,12 +48,20 @@ public class MainWindow extends JFrame {
 	
 	JFrame frame;
 	JLabel author;
-	JTextArea console, list;
-	    
-	public MainWindow() throws IOException{
+	JTextArea console;
+	public static JTextArea list;
+	
+	public String localPath = "C:/Users/Jorge/Desktop/SSD2", remotePath = "C:/Users/Jorge/Desktop/SSD";
+	
+	IProxy proxy;
+	private Hashtable<String, IFuturo> tablaFuturos = new Hashtable<String, IFuturo>();
+	
+	public Client(IProxy prox) throws IOException{
 		
        super("Trabajo Final SSD 2014/2015 3º Grado Ing. Telemática UPCT");
     
+       proxy = prox;
+       
        frame = this;
        
        // Fijamos tamaño de la ventana.       
@@ -59,7 +74,7 @@ public class MainWindow extends JFrame {
        getContentPane().add(mainBox);
        
        author = new JLabel();
-       author.setText("Jorge Mendoza Saucedo y Elena Martín Seonae ©Copyright 2014");
+       author.setText("Jorge Mendoza Saucedo y Elena Martín Seonae ©Copyright 2015");
        author.setPreferredSize(new Dimension(620,20));
 	   author.setAlignmentX(CENTER_ALIGNMENT);
 	   author.setForeground(Color.lightGray);
@@ -80,12 +95,12 @@ public class MainWindow extends JFrame {
     PrintStream out = new PrintStream( new TextAreaOutputStream( console ) );
 
     // redirect standard output stream to the TextAreaOutputStream
-    //System.setOut( out );
+       System.setOut( out );
 
     // redirect standard error stream to the TextAreaOutputStream
-    //System.setErr( out );
+       System.setErr( out );
     
-       System.out.println("Registro del programa: \n \n>>");
+       System.out.println("Registro del programa: \n>>");
        JScrollPane consolePane = new JScrollPane(console);
        consolePane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
        
@@ -94,7 +109,7 @@ public class MainWindow extends JFrame {
        listPane.setHorizontalScrollBar(null);
        listPane.setPreferredSize(new Dimension(150,0));
        listPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-       list.append("Lista de archivos: \n \n");
+       list.append("Lista de archivos: \n");
        list.setMargin(new Insets(10, 5, 10, 5));
        
        // Añadimos paneles a la ventana (a su contentPane).
@@ -114,7 +129,6 @@ public class MainWindow extends JFrame {
 	    /**
 		    * Clase interna: 
 		    * Utiliza layout por defecto.
-		    * 
 		    */
 		    class PanelBotones extends JPanel implements ActionListener{
 
@@ -146,19 +160,22 @@ public class MainWindow extends JFrame {
 					int level = 0;
 					Object[] opt = {1,2,3,4,5,6,7,8,9,10};
 					claveSeleccionada = arg0.getActionCommand();
-					System.out.println("Click en: " + claveSeleccionada + "\n");
+					System.out.println("Click en: " + claveSeleccionada);
 					switch (claveSeleccionada) {
 					case "SINCRONIZAR":
-						System.out.println("Sincronizando...\n");
-							Client client = new Client(list, "C:/Users/Jorge/Desktop/SSD", "");
-						try {
-							client.getFileList();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+						System.out.println("Sincronizando...");
+						proxy.getFileList(remotePath, prepararFuturo());
+//						Client client = new Client(list, "C:/Users/Jorge/Desktop/SSD", "");
+//						try {
+//							client.getFileList();
+//						} catch (IOException e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}
 						break;
 					case "MONITORIZAR Y SINCRONIZAR":
+//						comprobarFicherosSinActualizar();
+//						sincronizarFicheros(ArrayList, ):
 						break;
 					case "DESCONECTAR":
 						break;
@@ -171,10 +188,60 @@ public class MainWindow extends JFrame {
 					}
 				}                	     	    
 			}
+		    
+	/*
+	 * Métodos de estructura Objeto Activo
+	 */
+		    
+	@Override
+	public void done(String idFuturo) {
+		System.out.println("Futuro recibido con exito = " + idFuturo);
+		IFuturo r = tablaFuturos.get(idFuturo);
+		if (r == null){
+			System.out.println("Cliente: código de futuro desconocido");
+		}
+		else if (r instanceof FileList){
+			list.append((String) r.getResult());
+			tablaFuturos.remove(r.getId());
+		}else{
+			System.out.println("Cliente: formato de futuro desconocido");
+		}
+	}
+			    
     
+	private IFuturo prepararFuturo(){
+		IFuturo f = new FileList();
+		tablaFuturos.put(f.getId(), f);
+		f.attach(this);
+		return f;
+	}
+	
+	/*
+	 * Métodos internos
+	 */
+	public DirectoryStream<Path> listOfFiles(Path path){
+		try {
+			return Files.newDirectoryStream(path);
+		} catch (IOException e) {
+			System.out.println("Cliente-> Error al leer la lista de archivos en: " + path.toString());
+			e.printStackTrace();
+		}
+		return (DirectoryStream<Path>) new ArrayList<Path>();
+	}
+	
+	public ArrayList<Path> ficherosSoloEnServidor(){
+		
+		return null;		
+	}
+	
+	public ArrayList<Path> ficherosSoloEnCliente(){
+		
+		return null;
+	}
 		    
     public static void main(String [] args) throws IOException{
-    	MainWindow gui = new MainWindow();
+		ServerProxy pr = new ServerProxy();
+		Client cliente = new Client(pr);
     }
 
 }

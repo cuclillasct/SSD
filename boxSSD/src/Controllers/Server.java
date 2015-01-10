@@ -1,3 +1,4 @@
+
 package Controllers;
 
 import java.io.BufferedReader;
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.ServerSocket;
@@ -42,12 +44,13 @@ public class Server {
 	int port = 52534;
 	
 	
-	public Server() throws IOException{
+	public Server(){
+		
 		// Server, crea descriptor socket y hace bind a puerto
 		int id = 0;
 		try {
 			ss = new ServerSocket(port);
-			System.out.println("Servidor listo en puerto "+port+"\n");
+			System.out.println("Servidor-> Servidor listo en puerto "+port);
 			ExecutorService exec = Executors.newFixedThreadPool(2);
 			while(true){
 				try {
@@ -63,10 +66,18 @@ public class Server {
 
 			}
 		} catch (IOException e) {
+			System.out.println("Servidor-> No se ha podido establecer el servidor:");
 			e.printStackTrace();
 		}
+		// El cliente es el que cierra la conexión, esto es innecesario??
 		finally {
-			ss.close();
+			try {
+				ss.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("Servidor-> Fallo al cerrar la conexión con el cliente:");
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -79,21 +90,21 @@ public class Server {
 	public void chat(String str, int ident) throws IOException{
 		for (ServerThread rnbl : serverThreads) {
 			if (rnbl.id != ident) {
-				OutputStream output = rnbl.soc.getOutputStream();
-				Writer isr = new OutputStreamWriter(output);
-				BufferedWriter buff = new BufferedWriter(isr);
-				buff.write(ident+" dice: "+str+"\n");
+				PrintWriter buff = new PrintWriter(
+						new OutputStreamWriter(
+								rnbl.soc.getOutputStream()));
+				buff.println(ident+" dice: "+str);
 				buff.flush();
 			}
 		}
 	}
 	
-	//Métodos de servidor
+	//Métodos internos del servidor
 	public DirectoryStream<Path> listOfFiles(Path path){
 		try {
 			return Files.newDirectoryStream(path);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.out.println("Servidor-> Error al leer la lista de archivos en: " + path.toString());
 			e.printStackTrace();
 		}
 		return (DirectoryStream<Path>) new ArrayList<Path>();

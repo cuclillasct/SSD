@@ -52,11 +52,12 @@ public class ServerThread implements Runnable{
 				//Leemos la primera línea, que nos dice la función que queremos hacer
 				str = buff.readLine();
 				if (str.equals(LISTA_FICHEROS)) {
+					System.out.println("Comando recibido: " + str);
 					enviarListaFicheros(buff);
 				}else if(str.equals(SUBIR_FICHEROS)){
 					sth.chat(str, id);
 				}else if(str.equals("exit")){
-					System.out.println("Cerrando conexion..."+"\n");
+					System.out.println("Cerrando conexion con el cliente...");
 					break;
 				}else{
 					break;
@@ -68,13 +69,17 @@ public class ServerThread implements Runnable{
 		}finally{
 			try {
 				soc.close();
-				System.out.println("Conexion cerrada"+"\n");
+				System.out.println("Conexion cerrada");
 			} catch (IOException e) {
 					// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
+	
+	/*
+	 * Métodos internos
+	 */
 	
 	private void enviarListaFicheros(BufferedReader buff) throws IOException{
 		Path path = FileSystems.getDefault().getPath(buff.readLine());
@@ -83,14 +88,15 @@ public class ServerThread implements Runnable{
 		
 		OutputStream outstr = soc.getOutputStream();
 		Writer out = new OutputStreamWriter(outstr);
-		BufferedWriter outbuff = new BufferedWriter(out);
+		PrintWriter outbuff = new PrintWriter(out);
 		
 		for (Iterator iterator = list.iterator(); iterator
 				.hasNext();) {
 			Path pth = (Path) iterator.next();
-			outbuff.write(pth.getFileName().toString()+"\n");
-			System.out.println(pth.getFileName().toString()+"\n");
+			outbuff.println(pth.getFileName().toString());
+			System.out.println(pth.getFileName().toString());
 		}
-		outbuff.write("exit");
+		outbuff.println("exit");
+		outbuff.flush();
 	}
 }
