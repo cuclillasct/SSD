@@ -36,13 +36,9 @@ public class Client extends JFrame implements IObservadorFuturo{
 
 	
 	public static final String [] 
-    		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", "DESCONECTAR", "CAMBIAR DIRECTORIOS", "SALIR"};
+    		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", 
+		"DESCONECTAR", "CAMBIAR DIRECTORIOS", "SALIR"};
 	
-    /**
-	 * 
-	 * 
-	 * 
-	 */
 
 	String claveSeleccionada = null;
 	
