@@ -11,8 +11,9 @@ public class GeneralUtils {
 		for (int i = 0; i < packages.size(); i++) {
 			for (DataChunk dataChunk : packages) {
 				if (dataChunk.getnOrd() == i) {
-					System.out.println("ordenando" + i);
+					System.out.println("ordenando " + i);
 					packs.add(dataChunk);
+					break;
 				}
 			}
 		}

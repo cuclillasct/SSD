@@ -69,4 +69,17 @@ public class ChunkedFile implements IFuturo {
 		return size;
 	}
 
+	public ArrayList<DataChunk> getChunks() {
+		return chunks;
+	}
+
+	public void setChunks(ArrayList<DataChunk> chunks) {
+		this.chunks = chunks;
+	}
+	
+	public void addChunk(DataChunk chunk){
+		this.chunks.add(chunk);
+	}
+	
+
 }

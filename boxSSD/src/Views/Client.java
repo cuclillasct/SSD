@@ -171,13 +171,13 @@ public class Client extends JFrame implements IObservadorFuturo{
 						break;
 					case "MONITORIZAR Y SINCRONIZAR":
 						ArrayList<ChunkedFile> filesToDownload = new ArrayList<ChunkedFile>();
-						ChunkedFile future = (ChunkedFile) prepararFuturo(clavesVistas[1], "/A.jpg");
+						ChunkedFile future = (ChunkedFile) prepararFuturo(clavesVistas[1], "/prueba.txt");
 						filesToDownload.add(future);
 						proxy.downloadFiles(filesToDownload);
 						break;
 					case "DESCONECTAR":
 						ArrayList<ChunkedFile> filesToUpload = new ArrayList<ChunkedFile>();
-						ChunkedFile f = (ChunkedFile) prepararFuturo(clavesVistas[2], "/A.jpg");
+						ChunkedFile f = (ChunkedFile) prepararFuturo(clavesVistas[2], "/video.mp4");
 						filesToUpload.add(f);
 						proxy.uploadFiles(filesToUpload);
 						break;
@@ -201,19 +201,9 @@ public class Client extends JFrame implements IObservadorFuturo{
 		IFuturo r = tablaFuturos.get(idFuturo);
 		if (r == null){
 			System.out.println("Cliente: código de futuro desconocido");
-		}
-		else if (r instanceof FileList){
+		}else if (r instanceof FileList){
 			list.append((String) r.getResult());
 			tablaFuturos.remove(r.getId());
-		}else if (r instanceof ChunkedFile){
-			System.out.println("Recibido archivo: " + ((ChunkedFile)r).getRelativePath() + " con tamaño-> " + ((ChunkedFile) r).getSize() +" bytes");
-			try {
-				IOUtils.writeFile(folderPath + ((ChunkedFile) r).getRelativePath(), (ChunkedFile) r);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				System.out.println("Error al escribir archivo local.");
-				e.printStackTrace();
-			}
 		}else{
 			System.out.println("Cliente: formato de futuro desconocido");
 		}

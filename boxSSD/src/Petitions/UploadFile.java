@@ -1,5 +1,8 @@
 package Petitions;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -31,23 +34,42 @@ public class UploadFile implements IMethodRequest {
 		System.out.println("Conectando con: 127.0.0.1 Puerto: 52534");
 		
 		try {
-			ArrayList<DataChunk> filePackages = IOUtils.readFile(Client.folderPath + chunkedFile.getRelativePath());
+			//InputStream de lectura
+			File file = new File(Client.folderPath + chunkedFile.getRelativePath());
+			FileInputStream in = new FileInputStream(file);
+			BufferedInputStream input = new BufferedInputStream(in);
+			byte[] b; int i = 0; long sizeInBytes = file.length(), sizeInPackets = sizeInBytes/DataChunk.CHUNK_MAX_SIZE + (sizeInBytes%DataChunk.CHUNK_MAX_SIZE > 0 ? 1 : 0);
+			DataChunk chunk;
 			
-			//Out
+			//OutSocket
 			ObjectOutputStream outstr = new ObjectOutputStream(socket.getOutputStream());
 			
 			outstr.writeObject(ServerThread.SUBIR_FICHERO);
 			outstr.writeObject(chunkedFile.getRelativePath()); // "C:/Users/Jorge/Desktop\nexit");
-			outstr.writeInt(filePackages.size());
+			outstr.writeLong(sizeInPackets);
 			outstr.flush();
 			
 			System.out.println("Petición enviada: Subir fichero " + chunkedFile.getRelativePath());
-
-			for (DataChunk dataChunk : filePackages) {
-				System.out.println("Enviando paquetes... " + (dataChunk.getnOrd()+1) + " de " + filePackages.size());
-				outstr.writeObject(dataChunk);
+			
+			while (input.available() > 0) {
+				System.out.println("Quedan: " + input.available());
+				if (input.available() >= DataChunk.CHUNK_MAX_SIZE){
+					b = new byte[DataChunk.CHUNK_MAX_SIZE];
+					input.read(b, 0, b.length);
+					chunk = new DataChunk(i++, b, DataChunk.CHUNK_MAX_SIZE);
+					System.out.println("Leido localmente: " + (i-1));
+				}else{
+					b = new byte[input.available()];
+					input.read(b);
+					chunk = new DataChunk(i++, b, b.length);
+					System.out.println("Leido localmente ultimo paquete: " + (i-1));
+				}
+				System.out.println("Enviando paquetes... " + (chunk.getnOrd()+1) + " de " + sizeInPackets);
+				outstr.writeObject(chunk);
+				outstr.flush();
+				chunk = null; b = null;
 			}
-			outstr.flush();
+			input.close();
 			
 			//In
 			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());

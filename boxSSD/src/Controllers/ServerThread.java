@@ -1,7 +1,12 @@
 package Controllers;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,6 +32,7 @@ import javax.swing.JTextPane;
 import Models.ChunkedFile;
 import Models.DataChunk;
 import Util.IOUtils;
+import Views.Client;
 
 public class ServerThread implements Runnable{
 	
@@ -62,9 +68,9 @@ public class ServerThread implements Runnable{
 					enviarListaFicheros(instr);
 				}else if (str.equals(DESCARGAR_FICHERO)) {
 					enviarArchivo(instr);
+					break;
 				}else if(str.equals(SUBIR_FICHERO)){
-					receivedFile = recibirArchivo(instr);
-					postExecute = true;
+					recibirArchivo(instr);
 					break;
 				}else if(str.equals("exit")){
 					System.out.println("Servidor-> Cerrando conexion con el cliente...");
@@ -80,11 +86,6 @@ public class ServerThread implements Runnable{
 			try {
 				soc.close();
 				System.out.println("Servidor-> Conexion cerrada");
-				
-				//Postexecute para acelerar la comunicacion
-				if (postExecute) {
-					IOUtils.writeFile(Server.folderPath + receivedFile.getRelativePath(), receivedFile);
-				}
 			} catch (IOException e) {
 					// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -115,37 +116,68 @@ public class ServerThread implements Runnable{
 	}
 	
 	private void enviarArchivo(ObjectInputStream instr) throws IOException, ClassNotFoundException{
-		//Out
+		//OutSocket
 		ObjectOutputStream outstr = new ObjectOutputStream(soc.getOutputStream());
 		String relativePath = (String) instr.readObject();
-		ArrayList<DataChunk> filePackages = IOUtils.readFile(Server.folderPath + relativePath);
-		System.out.println("Servidor-> Enviando paquete de tamaño " + filePackages.size());
-		outstr.writeInt(filePackages.size());
-		for (DataChunk dataChunk : filePackages) {
-			System.out.println("Servidor-> Escribo chunk");
-			outstr.writeObject(dataChunk);
+		
+		//InputStream de lectura
+		File file = new File(Server.folderPath + relativePath);
+		FileInputStream in = new FileInputStream(file);
+		BufferedInputStream input = new BufferedInputStream(in);
+		byte[] b; int i = 0; long sizeInBytes = file.length(), sizeInPackets = sizeInBytes/DataChunk.CHUNK_MAX_SIZE + (sizeInBytes%DataChunk.CHUNK_MAX_SIZE > 0 ? 1 : 0);
+//		if (sizeInBytes > DataChunk.CHUNK_MAX_SIZE) {
+//			sizeInPackets = (sizeInBytes%DataChunk.CHUNK_MAX_SIZE)+1;
+//		}else sizeInPackets = 1; 
+		DataChunk chunk;
+		
+		System.out.println("Servidor-> Enviando archivo de tamaño " + sizeInPackets + " paquetes");
+		outstr.writeLong(sizeInPackets);
+		
+		while (input.available() > 0) {
+			System.out.println("Servidor-> Quedan: " + input.available());
+			if (input.available() >= DataChunk.CHUNK_MAX_SIZE){
+				b = new byte[DataChunk.CHUNK_MAX_SIZE];
+				input.read(b, 0, b.length);
+				chunk = new DataChunk(i++, b, DataChunk.CHUNK_MAX_SIZE);
+				System.out.println("Servidor-> Leido localmente: " + (i-1));
+			}else{
+				b = new byte[input.available()];
+				input.read(b);
+				chunk = new DataChunk(i++, b, b.length);
+				System.out.println("Servidor-> Leido localmente ultimo paquete: " + (i-1));
+			}
+			System.out.println("Servidor-> Enviando paquetes... " + (chunk.getnOrd()+1) + " de " + sizeInPackets);
+			outstr.writeObject(chunk);
+			outstr.flush();
+			chunk = null; b = null;
 		}
+		input.close();
+		
+		outstr.writeObject("exit");
 		outstr.flush();
 	}
 	
-	private ChunkedFile recibirArchivo(ObjectInputStream instr) throws IOException, ClassNotFoundException{
+	private void recibirArchivo(ObjectInputStream instr) throws IOException, ClassNotFoundException{
 		String relativePath = (String) instr.readObject();
-		int size = instr.readInt();
+		long size = instr.readLong();
 		System.out.println("Servidor-> Voy a recibir el archivo "+ relativePath +" con "+ size +" paquete(s)");
-		ArrayList<DataChunk> filePackages = new ArrayList<DataChunk>();
-		for (int i = 0; i < size; i++) {
-			filePackages.add((DataChunk) instr.readObject());
+		DataChunk chunk;
+		
+		// Stream para escribir
+		File file = new File(Server.folderPath + relativePath);
+		FileOutputStream out = new FileOutputStream(file);
+		BufferedOutputStream outstr = new BufferedOutputStream(out);
+		for (long i = 0; i < size; i++) {
+			chunk = (DataChunk) instr.readObject();
+			System.out.println("Servidor-> Recibido paquete de tamaño " + chunk.getSize() + " byte(s)");
+			outstr.write(chunk.getData());
+			chunk = null;
 		}
-		System.out.println("Servidor-> Recibido paquete de tamaño " + filePackages.size());
+		outstr.close();
 		
-		ObjectOutputStream outstr = new ObjectOutputStream(soc.getOutputStream());
+		ObjectOutputStream outObj = new ObjectOutputStream(soc.getOutputStream());
 		System.out.println("Servidor-> Cerrando conexión con el cliente...");
-		outstr.writeObject("exit");
-		outstr.flush();
-		
-		ChunkedFile receivedFile =  new ChunkedFile(relativePath, null);
-		receivedFile.setResult(filePackages);
-		
-		return receivedFile;
+		outObj.writeObject("exit");
+		outObj.flush();
 	}
 }

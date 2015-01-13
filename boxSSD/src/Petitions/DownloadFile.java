@@ -1,7 +1,10 @@
 package Petitions;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,6 +19,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import Controllers.Server;
 import Controllers.ServerThread;
 import Interfaces.IFuturo;
 import Interfaces.IMethodRequest;
@@ -23,6 +27,7 @@ import Models.ChunkedFile;
 import Models.DataChunk;
 import Util.GeneralUtils;
 import Util.IOUtils;
+import Views.Client;
 
 public class DownloadFile implements IMethodRequest {
 
@@ -38,35 +43,42 @@ public class DownloadFile implements IMethodRequest {
 		System.out.println("Conectando con: 127.0.0.1 Puerto: 52534");
 		
 		try {
-			//Out
-			ObjectOutputStream outstr = new ObjectOutputStream(socket.getOutputStream());
+			//OutSocket
+			ObjectOutputStream outObj = new ObjectOutputStream(socket.getOutputStream());
 			
-			outstr.writeObject(ServerThread.DESCARGAR_FICHERO);
-			outstr.writeObject(chunkedFile.getRelativePath()); // "C:/Users/Jorge/Desktop\nexit");
-			outstr.flush();
+			outObj.writeObject(ServerThread.DESCARGAR_FICHERO);
+			outObj.writeObject(chunkedFile.getRelativePath()); // "C:/Users/Jorge/Desktop\nexit");
+			outObj.flush();
 			
 			System.out.println("Petición enviada: Descargar fichero " + chunkedFile.getRelativePath());
 			
-			//In
+			//InSocket
 			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
 	
-			int size = instr.readInt();
+			long size = instr.readLong();
 			System.out.println("Voy a recibir un archivo con "+ size +"paquete(s)");
-			ArrayList<DataChunk> packages = new ArrayList<DataChunk>();
+
+			// Stream para escribir
+			File file = new File(Client.folderPath + chunkedFile.getRelativePath());
+			FileOutputStream out = new FileOutputStream(file);
+			BufferedOutputStream outstr = new BufferedOutputStream(out);
+			DataChunk chunk;
 			for (int i = 0; i < size; i++) {
 				try {
-					System.out.println("Leo chunk");
-					packages.add((DataChunk) instr.readObject());
+					chunk = (DataChunk) instr.readObject();
+					System.out.println("Leo chunk " + i);
+					outstr.write(chunk.getData());
+					chunk = null;
 				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
-			chunkedFile.setResult(GeneralUtils.orderPackages(packages));
+			outstr.close();
 			
 			System.out.println("Cerrando conexión con el servidor...");
-			outstr.writeObject("exit");
-			outstr.flush();		
+			outObj.writeObject("exit");
+			outObj.flush();		
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			System.out.println("Host remoto desconocido.");
