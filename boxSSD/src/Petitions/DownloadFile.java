@@ -31,10 +31,10 @@ import Views.Client;
 
 public class DownloadFile implements IMethodRequest {
 
-	ChunkedFile chunkedFile;
+	String relativePath;
 	
-	public DownloadFile(IFuturo future) {
-		this.chunkedFile = (ChunkedFile) future;
+	public DownloadFile(String path) {
+		this.relativePath = path;
 	}
 	
 	@Override
@@ -47,10 +47,10 @@ public class DownloadFile implements IMethodRequest {
 			ObjectOutputStream outObj = new ObjectOutputStream(socket.getOutputStream());
 			
 			outObj.writeObject(ServerThread.DESCARGAR_FICHERO);
-			outObj.writeObject(chunkedFile.getRelativePath()); // "C:/Users/Jorge/Desktop\nexit");
+			outObj.writeObject(relativePath); // "C:/Users/Jorge/Desktop\nexit");
 			outObj.flush();
 			
-			System.out.println("Petición enviada: Descargar fichero " + chunkedFile.getRelativePath());
+			System.out.println("Petición enviada: Descargar fichero " + relativePath);
 			
 			//InSocket
 			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
@@ -59,7 +59,7 @@ public class DownloadFile implements IMethodRequest {
 			System.out.println("Voy a recibir un archivo con "+ size +"paquete(s)");
 
 			// Stream para escribir
-			File file = new File(Client.folderPath + chunkedFile.getRelativePath());
+			File file = new File(Client.folderPath + relativePath);
 			FileOutputStream out = new FileOutputStream(file);
 			BufferedOutputStream outstr = new BufferedOutputStream(out);
 			DataChunk chunk;

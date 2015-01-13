@@ -5,15 +5,24 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
+import java.net.URI;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.nio.file.WatchEvent.Kind;
+import java.nio.file.WatchEvent.Modifier;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -38,8 +47,6 @@ import Util.IOUtils;
 import Util.TextAreaOutputStream;
 
 public class Client extends JFrame implements IObservadorFuturo{
-
-	
 	
 	public static final String [] 
     		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", 
@@ -53,7 +60,7 @@ public class Client extends JFrame implements IObservadorFuturo{
 	JTextArea console;
 	public static JTextArea list;
 
-	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDClient";
+	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDClient/";
 	
 	IProxy proxy;
 	FileList fileList;
@@ -62,13 +69,14 @@ public class Client extends JFrame implements IObservadorFuturo{
 	public Client(IProxy prox) throws IOException{
 		
        super("Trabajo Final SSD 2014/2015 3º Grado Ing. Telemática UPCT");
-    
+       
        proxy = prox;
+       fileList = new FileList();
        
        frame = this;
        
        // Fijamos tamaño de la ventana.       
-       setSize (700,400);
+       setSize (800,450);
        setContentPane(new JLabel(new ImageIcon("path")));
        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
        
@@ -98,10 +106,10 @@ public class Client extends JFrame implements IObservadorFuturo{
     PrintStream out = new PrintStream( new TextAreaOutputStream( console ) );
 
     // redirect standard output stream to the TextAreaOutputStream
-       //System.setOut( out );
+//       System.setOut( out );
 
     // redirect standard error stream to the TextAreaOutputStream
-       //System.setErr( out );
+//       System.setErr( out );
     
        System.out.println("Registro del programa: \n>>");
        JScrollPane consolePane = new JScrollPane(console);
@@ -170,15 +178,13 @@ public class Client extends JFrame implements IObservadorFuturo{
 						proxy.getFileList(Server.folderPath, prepararFuturo(clavesVistas[0], ""));
 						break;
 					case "MONITORIZAR Y SINCRONIZAR":
-						ArrayList<ChunkedFile> filesToDownload = new ArrayList<ChunkedFile>();
-						ChunkedFile future = (ChunkedFile) prepararFuturo(clavesVistas[1], "/prueba.txt");
-						filesToDownload.add(future);
+						ArrayList<String> filesToDownload = new ArrayList<String>();
+						filesToDownload.add("prueba.txt");
 						proxy.downloadFiles(filesToDownload);
 						break;
 					case "DESCONECTAR":
-						ArrayList<ChunkedFile> filesToUpload = new ArrayList<ChunkedFile>();
-						ChunkedFile f = (ChunkedFile) prepararFuturo(clavesVistas[2], "/video.mp4");
-						filesToUpload.add(f);
+						ArrayList<String> filesToUpload = new ArrayList<String>();
+						filesToUpload.add("video.mp4");
 						proxy.uploadFiles(filesToUpload);
 						break;
 					case "SALIR":
@@ -200,26 +206,27 @@ public class Client extends JFrame implements IObservadorFuturo{
 		System.out.println("Futuro recibido con exito = " + idFuturo);
 		IFuturo r = tablaFuturos.get(idFuturo);
 		if (r == null){
-			System.out.println("Cliente: código de futuro desconocido");
-		}else if (r instanceof FileList){
-			list.append((String) r.getResult());
+			System.out.println("Cliente: codigo de futuro desconocido");
+		}else if (r instanceof FileList){ // Mostramos la lista de archivos sincronizados
+			list.setText("Lista de archivos: \n");
+			for (String string : (ArrayList<String>) r.getResult()) {
+				list.append(string + "\n");
+			}
 			tablaFuturos.remove(r.getId());
+			ArrayList<String> filesToDownload = filesToDownload((ArrayList<String>) r.getResult());
+			ArrayList<String> filesToUpload = filesToUpload((ArrayList<String>) r.getResult());
+			proxy.downloadFiles(filesToDownload);
+			proxy.uploadFiles(filesToUpload);
 		}else{
 			System.out.println("Cliente: formato de futuro desconocido");
 		}
-	}
-			    
+	}	    
     
 	private IFuturo prepararFuturo(String petition, String argument){
 		IFuturo f = null;
 		if (petition.equals(clavesVistas[0])){
 			f = new FileList();
 			f.attach(this);
-		}else if (petition.equals(clavesVistas[1])) {
-			f = new ChunkedFile(argument, this);
-			f.attach(this);
-		}else if (petition.equals(clavesVistas[2])) {
-			f = new ChunkedFile(argument, null);
 		}else {
 			return null;
 		}
@@ -239,20 +246,49 @@ public class Client extends JFrame implements IObservadorFuturo{
 		}
 		return (DirectoryStream<Path>) new ArrayList<Path>();
 	}
-	
-	public ArrayList<Path> ficherosSoloEnServidor(){
-		
-		return null;		
-	}
-	
-	public ArrayList<Path> ficherosSoloEnCliente(){
-		
-		return null;
-	}
-		    
+
+    public ArrayList<String> filesToDownload (ArrayList<String> filesInServer){
+    	DirectoryStream<Path> dirList = listOfFiles(FileSystems.getDefault().getPath(folderPath));
+    	ArrayList<String> filesInClient = new ArrayList<String>();
+    	for (Path path : dirList) {
+			filesInClient.add(path.getFileName().toString());
+		}
+    	ArrayList<String> filesToDownload = new ArrayList<String>();
+    	boolean isInClient = false;
+    	for (String string : filesInServer) {
+			for(String files : filesInClient) {
+				if(files.equals(string)) isInClient = true;
+			}
+			if (!isInClient) filesToDownload.add(string);
+			isInClient = false;
+		}
+    	return filesToDownload;
+    }
+    
+    public ArrayList<String> filesToUpload (ArrayList<String> filesInServer){
+    	DirectoryStream<Path> dirList = listOfFiles(FileSystems.getDefault().getPath(folderPath));
+    	ArrayList<String> filesInClient = new ArrayList<String>();
+    	for (Path path : dirList) {
+			filesInClient.add(path.getFileName().toString());
+		}
+    	ArrayList<String> filesToUpload = new ArrayList<String>();
+    	boolean isInServer = false;
+    	for (String files : filesInClient) {
+			for (String string : filesInServer ) {
+				if(files.equals(string)) isInServer = true;
+			}
+			if (!isInServer) filesToUpload.add(files.toString());
+			isInServer = false;
+		}
+    	return filesToUpload;
+    }
+    
+    /*
+     *  Metodo main que inicia el programa
+     */
     public static void main(String [] args) throws IOException{
 		ServerProxy pr = new ServerProxy();
 		Client cliente = new Client(pr);
     }
-
+    
 }

@@ -36,7 +36,7 @@ import Views.Client;
 
 public class Server {
 	
-	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDServer";
+	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDServer/";
 	
 	// Server, crea descriptor socket y hace bind a puerto
 	boolean bool = true;
@@ -83,23 +83,6 @@ public class Server {
 		}
 	}
 
-//	public static void main(String[] args) throws IOException {
-//		
-//		MultipleThreadServerChat mth = new MultipleThreadServerChat();
-//
-//	}
-	
-	public void chat(String str, int ident) throws IOException{
-		for (ServerThread rnbl : serverThreads) {
-			if (rnbl.id != ident) {
-				PrintWriter buff = new PrintWriter(
-						new OutputStreamWriter(
-								rnbl.soc.getOutputStream()));
-				buff.println(ident+" dice: "+str);
-				buff.flush();
-			}
-		}
-	}
 	
 	//Métodos internos del servidor
 	public DirectoryStream<Path> listOfFiles(Path path){
@@ -111,10 +94,5 @@ public class Server {
 		}
 		return (DirectoryStream<Path>) new ArrayList<Path>();
 	}
-
 	
-//	public static void main(String [] args) throws IOException{
-//		new Server();
-//    }
-//	
 }

@@ -22,10 +22,10 @@ import Views.Client;
 
 public class UploadFile implements IMethodRequest {
 
-	ChunkedFile chunkedFile;
+	String relativePath;
 	
-	public UploadFile(IFuturo future) {
-		this.chunkedFile = (ChunkedFile) future;
+	public UploadFile(String path) {
+		this.relativePath = path;
 	}
 	
 	@Override
@@ -35,7 +35,7 @@ public class UploadFile implements IMethodRequest {
 		
 		try {
 			//InputStream de lectura
-			File file = new File(Client.folderPath + chunkedFile.getRelativePath());
+			File file = new File(Client.folderPath + relativePath);
 			FileInputStream in = new FileInputStream(file);
 			BufferedInputStream input = new BufferedInputStream(in);
 			byte[] b; int i = 0; long sizeInBytes = file.length(), sizeInPackets = sizeInBytes/DataChunk.CHUNK_MAX_SIZE + (sizeInBytes%DataChunk.CHUNK_MAX_SIZE > 0 ? 1 : 0);
@@ -45,11 +45,11 @@ public class UploadFile implements IMethodRequest {
 			ObjectOutputStream outstr = new ObjectOutputStream(socket.getOutputStream());
 			
 			outstr.writeObject(ServerThread.SUBIR_FICHERO);
-			outstr.writeObject(chunkedFile.getRelativePath()); // "C:/Users/Jorge/Desktop\nexit");
+			outstr.writeObject(relativePath); // "C:/Users/Jorge/Desktop\nexit");
 			outstr.writeLong(sizeInPackets);
 			outstr.flush();
 			
-			System.out.println("Petición enviada: Subir fichero " + chunkedFile.getRelativePath());
+			System.out.println("Petición enviada: Subir fichero " + relativePath);
 			
 			while (input.available() > 0) {
 				System.out.println("Quedan: " + input.available());
@@ -74,8 +74,7 @@ public class UploadFile implements IMethodRequest {
 			//In
 			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
 			
-			chunkedFile.setResult(null); // Este paquete no tiene observador
-			System.out.println("Fichero "+ chunkedFile.getRelativePath() + " enviado" );
+			System.out.println("Fichero "+ relativePath + " enviado" );
 			
 			System.out.println("Esperando cierre de conexión con el servidor...");
 			outstr.writeObject("exit");

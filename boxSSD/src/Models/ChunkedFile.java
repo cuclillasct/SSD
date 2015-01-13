@@ -6,7 +6,7 @@ import java.util.Calendar;
 import Interfaces.IFuturo;
 import Interfaces.IObservadorFuturo;
 
-public class ChunkedFile implements IFuturo {
+public class ChunkedFile {
 	
 	boolean hecho;
 	String relativePath, id;
@@ -17,40 +17,16 @@ public class ChunkedFile implements IFuturo {
 		id = new Long(Calendar.getInstance().getTimeInMillis()).toString();
 	}
 	
-	public ChunkedFile (String relativePath, IObservadorFuturo obs){
+	public ChunkedFile (String relativePath){
 		id = new Long(Calendar.getInstance().getTimeInMillis()).toString();
 		this.relativePath = relativePath;
-		attach(obs);
-	}
-	
-
-	@Override
-	public Object getResult() {
-		// TODO Auto-generated method stub
-		return chunks;
 	}
 
-	@Override
 	public void setResult(Object result) {
 		// TODO Auto-generated method stub
 		chunks = (ArrayList<DataChunk>) result;
 		hecho = true;
 		if (obs != null) obs.done(id);
-	}
-
-	@Override
-	public boolean isDone() {
-		return hecho;
-	}
-
-	@Override
-	public void attach(IObservadorFuturo obs) {
-		this.obs = obs;		
-	}
-
-	@Override
-	public String getId() {
-		return id;
 	}
 
 	public String getRelativePath() {

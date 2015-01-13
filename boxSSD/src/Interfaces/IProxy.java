@@ -19,11 +19,11 @@ public interface IProxy {
 	/*
 	 * Peticion al servidor: descarga de archivos
 	 */
-	public void downloadFiles(ArrayList<ChunkedFile> futuros);
+	public void downloadFiles(ArrayList<String> futuros);
 	
 	/*
 	 * Peticion al servidor: subida de archivos
 	 */
-	public void uploadFiles(ArrayList<ChunkedFile> futuros);
+	public void uploadFiles(ArrayList<String> futuros);
 	
 }

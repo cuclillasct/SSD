@@ -14,6 +14,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 import Views.Client;
 import Controllers.ServerThread;
@@ -49,9 +50,10 @@ public class GetFileList implements IMethodRequest {
 			//In
 			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
 			
-			String str, result = "";
+			String str;
+			ArrayList<String> result = new ArrayList<String>();
 			while (!(str = (String) instr.readObject()).equals("exit")) {
-				result = result + str + "\n";
+				result.add(str);
 				System.out.println("Leido: " + str);
 			}
 			fileList.setResult(result);

@@ -27,9 +27,9 @@ public class ServerProxy implements IProxy {
 	}
 
 	@Override
-	public void downloadFiles(ArrayList<ChunkedFile> futuros) {
+	public void downloadFiles(ArrayList<String> futuros) {
 		// TODO Auto-generated method stub
-		for (IFuturo file : futuros) {
+		for (String file : futuros) {
 			DownloadFile method = new DownloadFile(file);
 			try {
 				method.execute();
@@ -43,9 +43,9 @@ public class ServerProxy implements IProxy {
 	}
 	
 	@Override
-	public void uploadFiles(ArrayList<ChunkedFile> futuros) {
+	public void uploadFiles(ArrayList<String> futuros) {
 		// TODO Auto-generated method stub
-		for (IFuturo file : futuros) {
+		for (String file : futuros) {
 			UploadFile method = new UploadFile(file);
 			try {
 				method.execute();

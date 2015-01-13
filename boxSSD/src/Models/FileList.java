@@ -12,9 +12,8 @@ import Interfaces.IObservadorFuturo;
 
 public class FileList implements IFuturo{
 
-	String result;
+	ArrayList<String> result;
 	boolean hecho;
-	String descripcion;
 	IObservadorFuturo obs;
 	String id;
 	
@@ -27,34 +26,15 @@ public class FileList implements IFuturo{
 	public FileList (IObservadorFuturo obs){
 		attach(obs);
 	}
-	
-	/*
-	public Futuro (int key, IObservadorFuturo obs){
-		attach(obs);
-	}
-	*/
 
 	@Override
-	public String getResult() {
-//		String str = "";
-//		for (String string : result) {
-//			str.concat(string + "\n");
-//		}
+	public Object getResult() {
 		return result;
 	}
 	
 	@Override
 	public void setResult(Object result){
-//		String str;
-//		this.result = new ArrayList<String>();
-//		try {
-//
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//			System.out.println("Respuesta en formato incorrecto, no se ha podido leer.");
-//		}
-		this.result = (String) result;
+		this.result = (ArrayList<String>) result;
 		hecho = true;
 		if (obs != null) obs.done(id);
 	}
