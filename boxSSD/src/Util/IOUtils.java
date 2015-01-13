@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 
+import Models.ChunkedFile;
 import Models.DataChunk;
 
 public class IOUtils {
@@ -25,59 +26,40 @@ public class IOUtils {
 	public static ArrayList<DataChunk> readFile (String path) throws IOException{
 		ArrayList<DataChunk> packages = new ArrayList<DataChunk>();
 		FileInputStream in = new FileInputStream(path);
-		byte[] b = new byte[DataChunk.CHUNK_SIZE]; int i = 0;
-		while (in.available() != 0) {
-			in.read(b);
-			packages.add(new DataChunk(i++, b));
+		byte[] b = new byte[DataChunk.CHUNK_MAX_SIZE]; int i = 0;
+		try{
+			while (in.available() != 0) {
+				if (in.available() >= DataChunk.CHUNK_MAX_SIZE){
+					in.read(b);
+					packages.add(new DataChunk(i++, b, DataChunk.CHUNK_MAX_SIZE));
+				}else{
+					b = new byte[in.available()];
+					in.read(b);
+					packages.add(new DataChunk(i++, b, b.length));
+				}				
+			}
+		}catch (Exception e) {
+			// TODO: handle exception
+			in.close();
+			return packages;
 		}
+		in.close();
 		return packages;
 	}
 	
 	/**
-	 * Escribe un string en un fichero de texto.
-	 * @param s 
-	 * @param fichero fiechero destino
+	 * Escribe un ChunkedFile en un fichero.
+	 * @param fichero destino
+	 * @param chunkedfile
 	 */
-	public static void escribirEnFichero(String s, String fichero) throws FileNotFoundException {
-		
-		if (s == null || fichero == null){
-			return;
+	public static void writeFile (String path, ChunkedFile file) throws IOException{
+		ArrayList<DataChunk> packages = (ArrayList<DataChunk>) file.getResult();
+		FileOutputStream out = new FileOutputStream(path);
+		for (DataChunk dataChunk : packages) {
+			out.write(dataChunk.getData());
 		}
-		
-		PrintWriter streamWriter = null;
-		
-	    try {
-			streamWriter = new PrintWriter(new FileOutputStream (fichero));
-			streamWriter.println(s);
-			streamWriter.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			throw e;
-		}
+		out.close();
 	}
-	
-	/**
-	 * Escribe un array de strings en un fichero de texto, cada uno en una línea diferente.
-	 * @param s array de strings
-	 * @param fichero fichero destino.
-	 */
-	public static void escribirEnFichero(String [] s, String fichero) {
-				
-		if (s == null || fichero == null){
-			return;
-		}
-		
-		PrintWriter streamWriter = null;
-		
-	    try {
-			streamWriter = new PrintWriter(new FileOutputStream (fichero));
-			for (int i = 0; i < s.length; i++){
-				streamWriter.println(s[i]);
-			}
-			streamWriter.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
+
 	
 }

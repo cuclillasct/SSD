@@ -2,6 +2,7 @@ package Interfaces;
 
 import java.io.Reader;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * Modela el lugar donde el servidor escribe la respuesta 
@@ -10,7 +11,7 @@ import java.io.Serializable;
  *
  */
 public interface IFuturo extends Serializable{
-	
+
 	/**
 	 * Devuelve el resultado almacenado en el objeto futuro.
 	 * 
@@ -31,7 +32,7 @@ public interface IFuturo extends Serializable{
 	 * 
 	 * @param result resultado a almacenar en el futuro.
 	 */
-	public void setResult(String result);
+	public void setResult(Object result);
 	
 	/**
 	 * Devuelve el identificador del futuro. 

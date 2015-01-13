@@ -7,7 +7,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Array;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -28,12 +30,16 @@ import Interfaces.IFuturo;
 import Interfaces.IObservadorFuturo;
 import Controllers.Server;
 import Controllers.ServerProxy;
-import Controllers.TextAreaOutputStream;
 import Interfaces.IProxy;
+import Models.ChunkedFile;
+import Models.DataChunk;
 import Models.FileList;
+import Util.IOUtils;
+import Util.TextAreaOutputStream;
 
 public class Client extends JFrame implements IObservadorFuturo{
 
+	
 	
 	public static final String [] 
     		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", 
@@ -46,10 +52,11 @@ public class Client extends JFrame implements IObservadorFuturo{
 	JLabel author;
 	JTextArea console;
 	public static JTextArea list;
-	
-	public String localPath = "C:/Users/Jorge/Desktop/SSD2", remotePath = "C:/Users/Jorge/Desktop/SSD";
+
+	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDClient";
 	
 	IProxy proxy;
+	FileList fileList;
 	private Hashtable<String, IFuturo> tablaFuturos = new Hashtable<String, IFuturo>();
 	
 	public Client(IProxy prox) throws IOException{
@@ -91,10 +98,10 @@ public class Client extends JFrame implements IObservadorFuturo{
     PrintStream out = new PrintStream( new TextAreaOutputStream( console ) );
 
     // redirect standard output stream to the TextAreaOutputStream
-       System.setOut( out );
+       //System.setOut( out );
 
     // redirect standard error stream to the TextAreaOutputStream
-       System.setErr( out );
+       //System.setErr( out );
     
        System.out.println("Registro del programa: \n>>");
        JScrollPane consolePane = new JScrollPane(console);
@@ -118,7 +125,7 @@ public class Client extends JFrame implements IObservadorFuturo{
        
        // Forzamos a que la aplicación termine al cerrar la ventana.     
        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-       
+
        new Server();
     }
 	    
@@ -160,20 +167,19 @@ public class Client extends JFrame implements IObservadorFuturo{
 					switch (claveSeleccionada) {
 					case "SINCRONIZAR":
 						System.out.println("Sincronizando...");
-						proxy.getFileList(remotePath, prepararFuturo());
-//						Client client = new Client(list, "C:/Users/Jorge/Desktop/SSD", "");
-//						try {
-//							client.getFileList();
-//						} catch (IOException e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}
+						proxy.getFileList(Server.folderPath, prepararFuturo(clavesVistas[0], ""));
 						break;
 					case "MONITORIZAR Y SINCRONIZAR":
-//						comprobarFicherosSinActualizar();
-//						sincronizarFicheros(ArrayList, ):
+						ArrayList<ChunkedFile> filesToDownload = new ArrayList<ChunkedFile>();
+						ChunkedFile future = (ChunkedFile) prepararFuturo(clavesVistas[1], "/A.jpg");
+						filesToDownload.add(future);
+						proxy.downloadFiles(filesToDownload);
 						break;
 					case "DESCONECTAR":
+						ArrayList<ChunkedFile> filesToUpload = new ArrayList<ChunkedFile>();
+						ChunkedFile f = (ChunkedFile) prepararFuturo(clavesVistas[2], "/A.jpg");
+						filesToUpload.add(f);
+						proxy.uploadFiles(filesToUpload);
 						break;
 					case "SALIR":
 						frame.dispose();
@@ -199,16 +205,35 @@ public class Client extends JFrame implements IObservadorFuturo{
 		else if (r instanceof FileList){
 			list.append((String) r.getResult());
 			tablaFuturos.remove(r.getId());
+		}else if (r instanceof ChunkedFile){
+			System.out.println("Recibido archivo: " + ((ChunkedFile)r).getRelativePath() + " con tamaño-> " + ((ChunkedFile) r).getSize() +" bytes");
+			try {
+				IOUtils.writeFile(folderPath + ((ChunkedFile) r).getRelativePath(), (ChunkedFile) r);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("Error al escribir archivo local.");
+				e.printStackTrace();
+			}
 		}else{
 			System.out.println("Cliente: formato de futuro desconocido");
 		}
 	}
 			    
     
-	private IFuturo prepararFuturo(){
-		IFuturo f = new FileList();
+	private IFuturo prepararFuturo(String petition, String argument){
+		IFuturo f = null;
+		if (petition.equals(clavesVistas[0])){
+			f = new FileList();
+			f.attach(this);
+		}else if (petition.equals(clavesVistas[1])) {
+			f = new ChunkedFile(argument, this);
+			f.attach(this);
+		}else if (petition.equals(clavesVistas[2])) {
+			f = new ChunkedFile(argument, null);
+		}else {
+			return null;
+		}
 		tablaFuturos.put(f.getId(), f);
-		f.attach(this);
 		return f;
 	}
 	

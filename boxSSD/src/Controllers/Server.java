@@ -32,9 +32,11 @@ import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 
-import Models.ServerThread;
+import Views.Client;
 
 public class Server {
+	
+	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDServer";
 	
 	// Server, crea descriptor socket y hace bind a puerto
 	boolean bool = true;
@@ -51,14 +53,14 @@ public class Server {
 		try {
 			ss = new ServerSocket(port);
 			System.out.println("Servidor-> Servidor listo en puerto "+port);
-			ExecutorService exec = Executors.newFixedThreadPool(2);
+			ExecutorService exec = Executors.newFixedThreadPool(5);
 			while(true){
 				try {
 					soc = ss.accept();// Bloquea si no hay peticiones
 					ServerThread thread = new ServerThread(soc,id++,this);
 					serverThreads.add(thread);
 					exec.execute(thread);
-					System.out.println(ss.toString());
+					System.out.println("Servidor-> "+ss.toString());
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -111,4 +113,8 @@ public class Server {
 	}
 
 	
+//	public static void main(String [] args) throws IOException{
+//		new Server();
+//    }
+//	
 }
