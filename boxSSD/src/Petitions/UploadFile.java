@@ -67,7 +67,7 @@ public class UploadFile implements IMethodRequest {
 				System.out.println("Enviando paquetes... " + (chunk.getnOrd()+1) + " de " + sizeInPackets);
 				outstr.writeObject(chunk);
 				outstr.flush();
-				chunk = null; b = null;
+				chunk = null; b = null; outstr.reset(); // Liberacion de recursos
 			}
 			input.close();
 			
