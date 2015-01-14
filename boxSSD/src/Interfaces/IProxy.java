@@ -1,6 +1,7 @@
 package Interfaces;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import Models.ChunkedFile;
 
@@ -25,5 +26,10 @@ public interface IProxy {
 	 * Peticion al servidor: subida de archivos
 	 */
 	public void uploadFiles(ArrayList<String> futuros);
+	
+	/*
+	 * Peticion al servidor: Date sincronizada con el servidor
+	 */
+	public Date getCristianResult ();
 	
 }

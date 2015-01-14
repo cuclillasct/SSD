@@ -2,11 +2,13 @@ package Controllers;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import Interfaces.IFuturo;
 import Interfaces.IProxy;
 import Models.ChunkedFile;
 import Petitions.DownloadFile;
+import Petitions.GetCristianResult;
 import Petitions.GetFileList;
 import Petitions.UploadFile;
 
@@ -57,5 +59,13 @@ public class ServerProxy implements IProxy {
 			}
 		}		
 	}
+
+	@Override
+	public Date getCristianResult() {
+		// TODO Auto-generated method stub
+		GetCristianResult method = new GetCristianResult();
+		return method.getSynchronizedDate();
+	}
+	
 	
 }
