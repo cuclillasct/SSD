@@ -110,6 +110,7 @@ public class ServerThread implements Runnable{
 			Path pth = (Path) iterator.next();
 			outstr.writeObject(pth.getFileName().toString());
 			System.out.println("Servidor-> "+ pth.getFileName().toString());
+			outstr.reset(); // Liberacion de recursos
 		}
 		outstr.writeObject("exit");
 		outstr.flush();
@@ -149,7 +150,7 @@ public class ServerThread implements Runnable{
 			System.out.println("Servidor-> Enviando paquetes... " + (chunk.getnOrd()+1) + " de " + sizeInPackets);
 			outstr.writeObject(chunk);
 			outstr.flush();
-			chunk = null; b = null;
+			chunk = null; b = null; outstr.reset(); // Liberacion de recursos
 		}
 		input.close();
 		
