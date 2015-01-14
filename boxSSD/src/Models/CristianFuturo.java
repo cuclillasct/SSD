@@ -8,46 +8,49 @@ import Interfaces.IObservadorFuturo;
 
 public class CristianFuturo implements IFuturo{
 	
-	Date synchronizedDate;
+	Long serverDate;
 	boolean done;
 	IObservadorFuturo observer;
-	long id;
+	int id;
 	
-	public CristianFuturo(IObservadorFuturo obs) {
+	public CristianFuturo(int id){
+		this.id = id;
+	}
+	
+	public CristianFuturo(int id, IObservadorFuturo obs) {
 		// TODO Auto-generated constructor stub
 		observer = obs;
-		id = Calendar.getInstance().getTimeInMillis();
+		this.id = id;
 	}
 
 	@Override
 	public Object getResult() {
-		// TODO Auto-generated method stub
-		return synchronizedDate;
+		return serverDate;
 	}
 
 	@Override
 	public boolean isDone() {
-		// TODO Auto-generated method stub
 		return done;
 	}
 
 	@Override
 	public void setResult(Object result) {
-		// TODO Auto-generated method stub
-		synchronizedDate = (Date) result;
+		serverDate = (long) result;
 		done = true;
 		if(observer != null) observer.done(getId());
 	}
 
 	@Override
 	public String getId() {
-		// TODO Auto-generated method stub
 		return String.valueOf(id);
+	}
+	
+	public int getIntId(){
+		return id;
 	}
 
 	@Override
 	public void attach(IObservadorFuturo obs) {
-		// TODO Auto-generated method stub
 		observer = obs;
 	}
 

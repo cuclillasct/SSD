@@ -41,6 +41,7 @@ import Controllers.Server;
 import Controllers.ServerProxy;
 import Interfaces.IProxy;
 import Models.ChunkedFile;
+import Models.CristianFuturo;
 import Models.DataChunk;
 import Models.FileList;
 import Util.IOUtils;
@@ -51,7 +52,7 @@ public class Client extends JFrame implements IObservadorFuturo{
 	public static final String [] 
     		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", 
 		"DESCONECTAR", "CAMBIAR DIRECTORIOS", "SALIR"};
-	
+	public static final String [] kindsOfFuture = {"FileList", "CristianFuturo"};
 
 	String claveSeleccionada = null;
 	
@@ -65,6 +66,17 @@ public class Client extends JFrame implements IObservadorFuturo{
 	IProxy proxy;
 	FileList fileList;
 	private Hashtable<String, IFuturo> tablaFuturos = new Hashtable<String, IFuturo>();
+	
+	//variables para Cristian
+	public static final int iteraciones = 5;
+	//long serversTime [] = new long[iteraciones];
+	ArrayList<Long> serversTime = new ArrayList<>();
+	long serverTimeSet;
+	long difference;//donde guardamos la diferencia entre la hora cliente y servidor
+	long initialTimes [] = new long [iteraciones];
+	long finalTimes [] = new long [iteraciones];
+	boolean cristianDone = false;
+	
 	
 	public Client(IProxy prox) throws IOException{
 		
@@ -168,19 +180,27 @@ public class Client extends JFrame implements IObservadorFuturo{
 
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					int level = 0;
-					Object[] opt = {1,2,3,4,5,6,7,8,9,10};
+
+					//Object[] opt = {1,2,3,4,5,6,7,8,9,10};
 					claveSeleccionada = arg0.getActionCommand();
 					System.out.println("Click en: " + claveSeleccionada);
 					switch (claveSeleccionada) {
 					case "SINCRONIZAR":
 						System.out.println("Sincronizando...");
-						proxy.getFileList(Server.folderPath, prepararFuturo(clavesVistas[0], ""));
+						//first
+						cristianPetitions();
+						
+						//IMPORTANTE: DEBE ESPERAR A QUE TODAS LAS PETICIONES SE HAYAN CONTESTADO Y SE HAYA EJECUTADO EL ALGORITMO
+						
+						//scnd
+						proxy.getFileList(Server.folderPath, prepararFuturo(clavesVistas[0],kindsOfFuture[0], 0));
+						DirectoryStream<Path> dirList = listOfFiles(FileSystems.getDefault().getPath(folderPath));
+						System.out.println(dirList);
 						break;
 					case "MONITORIZAR Y SINCRONIZAR":
-						ArrayList<String> filesToDownload = new ArrayList<String>();
-						filesToDownload.add("prueba.txt");
-						proxy.downloadFiles(filesToDownload);
+						//ArrayList<String> filesToDownload = filesToDownload();
+						//filesToDownload.add("prueba.txt");
+						//proxy.downloadFiles(filesToDownload);
 						break;
 					case "DESCONECTAR":
 						ArrayList<String> filesToUpload = new ArrayList<String>();
@@ -217,16 +237,28 @@ public class Client extends JFrame implements IObservadorFuturo{
 			ArrayList<String> filesToUpload = filesToUpload((ArrayList<String>) r.getResult());
 			proxy.downloadFiles(filesToDownload);
 			proxy.uploadFiles(filesToUpload);
-		}else{
+		} else if(r instanceof CristianFuturo){
+			serversTime.add(r.getIntId(),(Long) r.getResult());
+			finalTimes[r.getIntId()] = System.currentTimeMillis();
+			cristianAlgorithm(r.getIntId());
+			tablaFuturos.remove(r.getId());
+		}
+		else{
 			System.out.println("Cliente: formato de futuro desconocido");
 		}
 	}	    
     
-	private IFuturo prepararFuturo(String petition, String argument){
+	private IFuturo prepararFuturo(String petition, String type, int argument){//elimino el ", String argument")
 		IFuturo f = null;
 		if (petition.equals(clavesVistas[0])){
-			f = new FileList();
-			f.attach(this);
+			if(type.equals(kindsOfFuture[1])){
+				f = new CristianFuturo(argument);
+				f.attach(this);
+			}
+			if(type.equals(kindsOfFuture[0])){
+				f = new FileList();
+				f.attach(this);
+			}
 		}else {
 			return null;
 		}
@@ -281,6 +313,34 @@ public class Client extends JFrame implements IObservadorFuturo{
 			isInServer = false;
 		}
     	return filesToUpload;
+    }
+    
+    public void cristianPetitions(){//cristianPetitions(int iterations) 
+    	
+    	for (int i = 0; i < iteraciones; i++) {
+			initialTimes[i] = System.currentTimeMillis();
+			IFuturo future = prepararFuturo(clavesVistas[0],kindsOfFuture[1], i);
+			proxy.getCristianTime(future);
+		}
+    
+    }
+    
+    public void cristianAlgorithm(int number){
+    	//synchronized(cristianDone){ no se pueden sincronizar ni booleans ni ná
+	    if(number == (iteraciones-1) ){
+	    	long differences [] = new long [iteraciones];
+	    	long lessTime = Long.MAX_VALUE; int minorIter=0;
+	    	for (int i = 0; i < differences.length; i++) {
+				differences[i] = initialTimes[i] - finalTimes[i];
+				if(differences[i] < lessTime){
+					lessTime = differences[i];
+					minorIter = i;
+				}
+			}
+	    	serverTimeSet = serversTime.get(minorIter) + (lessTime/2);
+	    	difference = serverTimeSet - finalTimes[minorIter];
+	    }
+    	//}
     }
     
     /*

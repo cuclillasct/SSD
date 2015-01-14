@@ -23,6 +23,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.swing.JLabel;
@@ -75,6 +77,8 @@ public class ServerThread implements Runnable{
 				}else if(str.equals("exit")){
 					System.out.println("Servidor-> Cerrando conexion con el cliente...");
 					break;
+				}else if(str.equals(SINCRONIZAR)){
+					obtenerHora(instr);
 				}else{
 					break;
 				}
@@ -180,5 +184,12 @@ public class ServerThread implements Runnable{
 		System.out.println("Servidor-> Cerrando conexión con el cliente...");
 		outObj.writeObject("exit");
 		outObj.flush();
+	}
+
+	private void obtenerHora(ObjectInputStream instr) throws IOException{
+		ObjectOutputStream outstr = new ObjectOutputStream(soc.getOutputStream());
+		long servertime = System.currentTimeMillis();
+		outstr.writeObject(servertime);
+		outstr.flush();
 	}
 }

@@ -30,6 +30,6 @@ public interface IProxy {
 	/*
 	 * Peticion al servidor: Date sincronizada con el servidor
 	 */
-	public Date getCristianResult ();
+	public void getCristianTime(IFuturo futuro);
 	
 }

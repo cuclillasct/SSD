@@ -1,33 +1,30 @@
 package Models;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.AbstractMap;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-
-import javax.xml.crypto.dsig.keyinfo.KeyValue;
+import java.util.Set;
 
 import Interfaces.IFuturo;
 import Interfaces.IObservadorFuturo;
 
 public class FileList implements IFuturo{
 
-	// MIRA SI TE VALE ASI, AbstractMap.SimpleEntry es la forma que he encontrado para declarar un PAR DE VALORES
-	// Si se te ocurre una forma mejor implementala
-	// HashMap<String, AbstractMap.SimpleEntry<String, Date>> results; //HashMap<filePath, AbstractMap.SimpleEntry<hashCode, lastModifiedDate>>
-	ArrayList<String> result;
+
+	HashMap<String, AbstractMap.SimpleEntry<Byte[], Date>> results;//HashMap<filePath, AbstractMap.SimpleEntry<hashCode, lastModifiedDate>>
+	//FileListObject results;
 	boolean hecho;
 	IObservadorFuturo obs;
 	String id;	
 	
+		
 	public FileList (){
 		id = new Long(Calendar.getInstance().getTimeInMillis()).toString();
+		
 	}
 	
 	public FileList (IObservadorFuturo obs){
@@ -36,12 +33,12 @@ public class FileList implements IFuturo{
 
 	@Override
 	public Object getResult() {
-		return result;
+		return results;
 	}
 	
 	@Override
 	public void setResult(Object result){
-		this.result = (ArrayList<String>) result;
+		this.results = (HashMap<String, SimpleEntry<Byte[], Date>>) result;
 		hecho = true;
 		if (obs != null) obs.done(id);
 	}
@@ -62,4 +59,19 @@ public class FileList implements IFuturo{
 		return id;
 	}
 
+	@Override
+	public int getIntId() {
+		// TODO Auto-generated method stub
+		return -1;
+	}
+
+//	results = new HashMap<String, AbstractMap.SimpleEntry<Byte[],Date>>();
+//	Set claves =  results.keySet();
+//	for (Iterator iterator = claves.iterator(); iterator.hasNext();) {
+//		String filename = (String) iterator.next();
+//		AbstractMap.SimpleEntry<Byte[], Date> filedata  = results.get(filename);
+//		Byte[] hash = filedata.getKey();
+//		Date time = filedata.getValue();
+//	}
+	
 }

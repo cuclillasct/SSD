@@ -41,6 +41,7 @@ public interface IFuturo extends Serializable{
 	 * @return identificador del futuro.
 	 */
 	public String getId();
+	public int getIntId();
 	
 	/**
 	 * Método de suscripción. Los observadores de los futuros
@@ -50,4 +51,6 @@ public interface IFuturo extends Serializable{
 	 * @param obs observador del futuro.
 	 */
 	public void attach(IObservadorFuturo obs);
+
+
 }
