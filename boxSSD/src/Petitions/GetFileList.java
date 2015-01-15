@@ -14,7 +14,10 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 
 import Views.Client;
 import Controllers.ServerThread;
@@ -51,11 +54,7 @@ public class GetFileList implements IMethodRequest {
 			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
 			
 			String str;
-			ArrayList<String> result = new ArrayList<String>();
-			while (!(str = (String) instr.readObject()).equals("exit")) {
-				result.add(str);
-				System.out.println("Leido: " + str);
-			}
+			HashMap<String, AbstractMap.SimpleEntry<Byte[], Date>> result = (HashMap<String, AbstractMap.SimpleEntry<Byte[], Date>>) instr.readObject();
 			fileList.setResult(result);
 			
 			System.out.println("Cerrando conexión con el servidor...");

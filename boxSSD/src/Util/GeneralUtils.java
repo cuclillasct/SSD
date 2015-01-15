@@ -1,11 +1,13 @@
 package Util;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import Models.DataChunk;
 
@@ -26,7 +28,7 @@ public class GeneralUtils {
 	}
 	
 	
-	public byte[] getHash(String pathFile) throws IOException{
+	public static byte[] getHash(String pathFile){
 	    MessageDigest md = null;
 	    FileInputStream file;
 	    byte[] hashBytes;
@@ -45,7 +47,7 @@ public class GeneralUtils {
 		    while ((nread = file.read(data)) != -1) {//lee los bytes del tamaño de data y los almacena en él.
 		      md.update(data, 0, nread);	//actualiza con ese bloque de datos
 		    }
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			System.out.println("No se ha encontrado el archivo: " + pathFile);
 			e.printStackTrace();
 		}
@@ -55,4 +57,8 @@ public class GeneralUtils {
 	    return hashBytes;
 	}
 
+	public static Date getLastModifiedDate (String path){
+		File file = new File(path);
+		return new Date(file.lastModified());
+	}
 }

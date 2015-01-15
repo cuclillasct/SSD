@@ -8,16 +8,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 
-import Controllers.Server;
 import Controllers.ServerThread;
-import Interfaces.IFuturo;
 import Interfaces.IMethodRequest;
-import Models.ChunkedFile;
 import Models.DataChunk;
-import Util.GeneralUtils;
-import Util.IOUtils;
 import Views.Client;
 
 public class UploadFile implements IMethodRequest {
@@ -76,9 +70,9 @@ public class UploadFile implements IMethodRequest {
 			
 			System.out.println("Fichero "+ relativePath + " enviado" );
 			
-			System.out.println("Esperando cierre de conexión con el servidor...");
-			outstr.writeObject("exit");
-			outstr.flush();
+//			System.out.println("Esperando cierre de conexión con el servidor...");
+//			outstr.writeObject("exit");
+//			outstr.flush();
 //			while(!((String) instr.readObject()).equals("exit")){} //Esperamos que cierre el servidor
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block

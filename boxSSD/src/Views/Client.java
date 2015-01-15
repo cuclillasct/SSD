@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.net.URI;
@@ -20,9 +21,15 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchEvent.Modifier;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.AbstractMap.SimpleEntry;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -44,7 +51,7 @@ import Models.ChunkedFile;
 import Models.CristianFuturo;
 import Models.DataChunk;
 import Models.FileList;
-import Util.IOUtils;
+import Util.GeneralUtils;
 import Util.TextAreaOutputStream;
 
 public class Client extends JFrame implements IObservadorFuturo{
@@ -229,12 +236,29 @@ public class Client extends JFrame implements IObservadorFuturo{
 			System.out.println("Cliente: codigo de futuro desconocido");
 		}else if (r instanceof FileList){ // Mostramos la lista de archivos sincronizados
 			list.setText("Lista de archivos: \n");
-			for (String string : (ArrayList<String>) r.getResult()) {
+			for (String string : ((HashMap<String, AbstractMap.SimpleEntry<Byte[], Date>>) r.getResult()).keySet()) {
 				list.append(string + "\n");
 			}
 			tablaFuturos.remove(r.getId());
-			ArrayList<String> filesToDownload = filesToDownload((ArrayList<String>) r.getResult());
-			ArrayList<String> filesToUpload = filesToUpload((ArrayList<String>) r.getResult());
+			
+			Path path = FileSystems.getDefault().getPath(Client.folderPath);
+			System.out.println("Servidor-> " + path.toString()+"\n");
+			DirectoryStream<Path> list = listOfFiles(path);
+			
+			HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> fileList = new HashMap<String, AbstractMap.SimpleEntry<byte[], Date>>();
+			String str; Date date; Byte[] hash;
+			SimpleEntry<byte[], Date> valuePair;
+			
+			for (Iterator iterator = list.iterator(); iterator.hasNext();) {
+				Path pth = (Path) iterator.next();
+				str = Client.folderPath + pth.getFileName().toString();
+				valuePair = new AbstractMap.SimpleEntry<byte[], Date>(GeneralUtils.getHash(str), GeneralUtils.getLastModifiedDate(str));
+				fileList.put(pth.getFileName().toString(), valuePair);
+			}
+			
+			ArrayList<String> filesToDownload = filesToDownload((HashMap<String, AbstractMap.SimpleEntry<byte[], Date>>) r.getResult(), fileList);
+			ArrayList<String> filesToUpload = filesToUpload((HashMap<String, AbstractMap.SimpleEntry<byte[], Date>>) r.getResult(), fileList);
+			System.out.println("Descargando " + filesToDownload.size() + " archivos del servidor");
 			proxy.downloadFiles(filesToDownload);
 			proxy.uploadFiles(filesToUpload);
 		} else if(r instanceof CristianFuturo){
@@ -266,9 +290,11 @@ public class Client extends JFrame implements IObservadorFuturo{
 		return f;
 	}
 	
-	/*
+	/*********************************************************************
+	 * 
 	 * Métodos internos
-	 */
+	 * 
+	 *********************************************************************/
 	public DirectoryStream<Path> listOfFiles(Path path){
 		try {
 			return Files.newDirectoryStream(path);
@@ -279,38 +305,38 @@ public class Client extends JFrame implements IObservadorFuturo{
 		return (DirectoryStream<Path>) new ArrayList<Path>();
 	}
 
-    public ArrayList<String> filesToDownload (ArrayList<String> filesInServer){
-    	DirectoryStream<Path> dirList = listOfFiles(FileSystems.getDefault().getPath(folderPath));
-    	ArrayList<String> filesInClient = new ArrayList<String>();
-    	for (Path path : dirList) {
-			filesInClient.add(path.getFileName().toString());
-		}
+    public ArrayList<String> filesToDownload (HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> filesInServer, HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> filesInClient){
     	ArrayList<String> filesToDownload = new ArrayList<String>();
-    	boolean isInClient = false;
-    	for (String string : filesInServer) {
-			for(String files : filesInClient) {
-				if(files.equals(string)) isInClient = true;
+    	for (String file : filesInServer.keySet()) {
+			if (filesInClient.containsKey(file)) {// Si tenemos el archivo en el cliente, comprobamos
+				if (!filesInServer.get(file).getKey().equals(filesInClient.get(file).getKey())) { // Si son distintos
+					System.out.println("Archivo distinto encontrado en el servidor: " + file);
+					if (filesInServer.get(file).getValue().after(filesInClient.get(file).getValue())) { // Si se modificó después que en el cliente, lo descargamos
+						System.out.println("Archivo más actual encontrado en el servidor: " + file);
+						filesToDownload.add(file);
+					}
+				}
+			}else {// 
+				filesToDownload.add(file);
 			}
-			if (!isInClient) filesToDownload.add(string);
-			isInClient = false;
 		}
     	return filesToDownload;
     }
     
-    public ArrayList<String> filesToUpload (ArrayList<String> filesInServer){
-    	DirectoryStream<Path> dirList = listOfFiles(FileSystems.getDefault().getPath(folderPath));
-    	ArrayList<String> filesInClient = new ArrayList<String>();
-    	for (Path path : dirList) {
-			filesInClient.add(path.getFileName().toString());
-		}
+    public ArrayList<String> filesToUpload (HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> filesInServer, HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> filesInClient){
     	ArrayList<String> filesToUpload = new ArrayList<String>();
-    	boolean isInServer = false;
-    	for (String files : filesInClient) {
-			for (String string : filesInServer ) {
-				if(files.equals(string)) isInServer = true;
+    	for (String file : filesInClient.keySet()) {
+			if (filesInServer.containsKey(file)) {// Si el servidor tiene el archivo, comprobamos. Si no, lo subimos
+				if (!filesInClient.get(file).getKey().equals(filesInServer.get(file).getKey())) { // Si son distintos
+					System.out.println("Archivo distinto encontrado en el cliente: " + file);
+					if (filesInClient.get(file).getValue().after(filesInServer.get(file).getValue())) { // Si se modificó después que en el servidor
+						System.out.println("Archivo más actual encontrado en el cliente: " + file);
+						filesToUpload.add(file);
+					}
+				}
+			}else {
+				filesToUpload.add(file);
 			}
-			if (!isInServer) filesToUpload.add(files.toString());
-			isInServer = false;
 		}
     	return filesToUpload;
     }

@@ -2,39 +2,26 @@ package Controllers;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.Writer;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
-
-import javax.swing.JLabel;
-import javax.swing.JTextArea;
-import javax.swing.JTextPane;
 
 import Models.ChunkedFile;
 import Models.DataChunk;
-import Util.IOUtils;
-import Views.Client;
+import Util.GeneralUtils;
 
 public class ServerThread implements Runnable{
 	
@@ -74,11 +61,11 @@ public class ServerThread implements Runnable{
 				}else if(str.equals(SUBIR_FICHERO)){
 					recibirArchivo(instr);
 					break;
+				}else if(str.equals(SINCRONIZAR)){
+					obtenerHora(instr);
 				}else if(str.equals("exit")){
 					System.out.println("Servidor-> Cerrando conexion con el cliente...");
 					break;
-				}else if(str.equals(SINCRONIZAR)){
-					obtenerHora(instr);
 				}else{
 					break;
 				}
@@ -109,13 +96,19 @@ public class ServerThread implements Runnable{
 		
 		ObjectOutputStream outstr = new ObjectOutputStream(soc.getOutputStream());
 		
-		for (Iterator iterator = list.iterator(); iterator
-				.hasNext();) {
+		HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> fileList = new HashMap<String, AbstractMap.SimpleEntry<byte[], Date>>();
+		String str; Date date; Byte[] hash;
+		SimpleEntry<byte[], Date> valuePair;
+		
+		for (Iterator iterator = list.iterator(); iterator.hasNext();) {
 			Path pth = (Path) iterator.next();
-			outstr.writeObject(pth.getFileName().toString());
+			str = Server.folderPath + pth.getFileName().toString();
+			valuePair = new AbstractMap.SimpleEntry<byte[], Date>(GeneralUtils.getHash(str), GeneralUtils.getLastModifiedDate(str));
+			fileList.put(pth.getFileName().toString(), valuePair);
 			System.out.println("Servidor-> "+ pth.getFileName().toString());
-			outstr.reset(); // Liberacion de recursos
+//			outstr.reset(); // Liberacion de recursos
 		}
+		outstr.writeObject(fileList);
 		outstr.writeObject("exit");
 		outstr.flush();
 	}
