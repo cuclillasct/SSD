@@ -1,5 +1,5 @@
 
-package Controllers;
+package controllers;
 
 
 import java.io.IOException;
@@ -12,6 +12,11 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.swing.JTextArea;
+
+import utils.GeneralUtils;
+import views.OldClient;
+
 /**
  * Clase que modela al servidor
  *
@@ -19,14 +24,13 @@ import java.util.concurrent.Executors;
 public class Server {
 	
 	//Carpeta de archivos del servidor:
-	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDServer/";
+	public static final String folderPath = GeneralUtils.getDirectory(1);
 	
 	boolean bool = true;
 	Socket soc = null;
 	ServerSocket ss = null;
 	ArrayList<ServerThread> serverThreads = new ArrayList<>();
 	int port = 52534;
-	
 	
 	public Server(){
 		
@@ -81,5 +85,9 @@ public class Server {
 		}
 		return (DirectoryStream<Path>) new ArrayList<Path>();
 	}
+	
+    public static void main(String [] args) throws IOException{
+    	Server server = new Server();
+    }
 	
 }

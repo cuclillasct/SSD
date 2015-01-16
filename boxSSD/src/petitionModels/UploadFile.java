@@ -1,4 +1,6 @@
-package Petitions;
+package petitionModels;
+
+import interfaces.IMethodRequest;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -8,10 +10,9 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import Controllers.ServerThread;
-import Interfaces.IMethodRequest;
-import Models.DataChunk;
-import Views.Client;
+import views.OldClient;
+import controllers.ServerThread;
+import models.DataChunk;
 
 /**
  * Clase modeladora de la petición 
@@ -32,7 +33,7 @@ public class UploadFile implements IMethodRequest {
 		
 		try {
 			//InputStream de lectura
-			File file = new File(Client.folderPath + relativePath);
+			File file = new File(OldClient.folderPath + relativePath);
 			FileInputStream in = new FileInputStream(file);
 			BufferedInputStream input = new BufferedInputStream(in);//buffer de lectura para subir
 			byte[] b; int i = 0; long sizeInBytes = file.length(), sizeInPackets = sizeInBytes/DataChunk.CHUNK_MAX_SIZE + (sizeInBytes%DataChunk.CHUNK_MAX_SIZE > 0 ? 1 : 0);

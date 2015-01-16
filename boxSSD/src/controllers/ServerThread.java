@@ -1,4 +1,4 @@
-package Controllers;
+package controllers;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -17,8 +17,8 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import Models.DataChunk;
-import Util.GeneralUtils;
+import utils.GeneralUtils;
+import models.DataChunk;
 
 /**
  * hilos que sirven peticiones
@@ -196,8 +196,6 @@ public class ServerThread implements Runnable{
 		
 		ObjectOutputStream outObj = new ObjectOutputStream(soc.getOutputStream());
 		System.out.println("Servidor-> Recibido archivo. Cerrando conexión con el cliente...");
-		outObj.writeObject("exit");
-		outObj.flush();
 	}
 
 	/**

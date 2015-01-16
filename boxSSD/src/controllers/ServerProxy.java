@@ -1,14 +1,15 @@
-package Controllers;
+package controllers;
+
+import interfaces.IFuturo;
+import interfaces.IProxy;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-import Interfaces.IFuturo;
-import Interfaces.IProxy;
-import Petitions.DownloadFile;
-import Petitions.GetCristianTime;
-import Petitions.GetFileList;
-import Petitions.UploadFile;
+import petitionModels.DownloadFile;
+import petitionModels.GetCristianTime;
+import petitionModels.GetFileList;
+import petitionModels.UploadFile;
 
 /**
  * Clase que modela el proxy del servidor

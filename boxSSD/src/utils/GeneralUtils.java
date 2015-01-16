@@ -1,4 +1,4 @@
-package Util;
+package utils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,7 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-import Models.DataChunk;
+import models.DataChunk;
 
 public class GeneralUtils {
 	
@@ -54,6 +54,7 @@ public class GeneralUtils {
 		    while ((nread = file.read(data)) != -1) {//lee los bytes del tamaño de data y los almacena en él.
 		      md.update(data, 0, nread);	//actualiza con ese bloque de datos
 		    }
+		    file.close();
 		} catch (IOException e) {
 			System.out.println("No se ha encontrado el archivo: " + pathFile);
 			e.printStackTrace();
@@ -72,5 +73,26 @@ public class GeneralUtils {
 	public static Long getLastModifiedDate (String path){
 		File file = new File(path);
 		return new Long(file.lastModified());
+	}
+	
+	/**
+	 * Obtiene la ruta de la carpeta sincronizada
+	 * @param client/server
+	 * @return String folderPath
+	 */
+	public static String getDirectory(int n){	// n = 0 -> Cliente, n = 1 -> Servidor
+		String str = System.getProperty("user.home") + "/Desktop/SSDClient/";
+		if (n == 0) {
+			str = System.getProperty("user.home") + "/Desktop/SSDClient/";
+		}else if (n == 1) {
+			str = System.getProperty("user.home") + "/Desktop/SSDServer/";
+		}
+		File file = new File(str);
+		if (file.exists()) {
+			return str;
+		}else {  //Si el directorio no existe, lo crea
+			file.mkdir();
+			return str;
+		}
 	}
 }

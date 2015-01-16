@@ -1,7 +1,7 @@
-package Models;
+package models;
 
-import Interfaces.IFuturo;
-import Interfaces.IObservadorFuturo;
+import interfaces.IFuturo;
+import interfaces.IObservadorFuturo;
 
 /**
  * Clase que modela el futuro

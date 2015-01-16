@@ -1,11 +1,11 @@
-package Models;
+package models;
+
+import interfaces.IFuturo;
+import interfaces.IObservadorFuturo;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Calendar;
 import java.util.HashMap;
-
-import Interfaces.IFuturo;
-import Interfaces.IObservadorFuturo;
 
 /**
  * Clase que modela el futuro 

@@ -1,4 +1,6 @@
-package Petitions;
+package petitionModels;
+
+import interfaces.IMethodRequest;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -9,10 +11,9 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import Controllers.ServerThread;
-import Interfaces.IMethodRequest;
-import Models.DataChunk;
-import Views.Client;
+import views.OldClient;
+import controllers.ServerThread;
+import models.DataChunk;
 
 /**
  * Clase modeladora de la petición 
@@ -49,7 +50,7 @@ public class DownloadFile implements IMethodRequest {
 			System.out.println("Voy a recibir un archivo con "+ size +"paquete(s)");
 
 			// Stream para escribir
-			File file = new File(Client.folderPath + relativePath);
+			File file = new File(OldClient.folderPath + relativePath);
 			FileOutputStream out = new FileOutputStream(file);//para escribir el archivo
 			BufferedOutputStream outstr = new BufferedOutputStream(out);//usamos bufferado por la memoria
 			DataChunk chunk;

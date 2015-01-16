@@ -1,4 +1,8 @@
-package Views;
+package views;
+
+import interfaces.IFuturo;
+import interfaces.IObservadorFuturo;
+import interfaces.IProxy;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -30,32 +34,31 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 
-import Interfaces.IFuturo;
-import Interfaces.IObservadorFuturo;
-import Controllers.Server;
-import Controllers.ServerProxy;
-import Interfaces.IProxy;
-import Models.CristianFuturo;
-import Models.FileList;
-import Util.GeneralUtils;
-import Util.TextAreaOutputStream;
+import utils.GeneralUtils;
+import utils.TextAreaOutputStream;
+import controllers.Server;
+import controllers.ServerProxy;
+import models.CristianFuturo;
+import models.FileList;
+import net.contentobjects.jnotify.JNotify;
+import net.contentobjects.jnotify.JNotifyException;
+import net.contentobjects.jnotify.JNotifyListener;
 
-public class Client extends JFrame implements IObservadorFuturo{
+public class OldClient extends JFrame implements IObservadorFuturo, JNotifyListener{
 	private static final long serialVersionUID = 1L;
 	
 	public static final String [] 
-    		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", 
-		"DESCONECTAR", "CAMBIAR DIRECTORIOS", "SALIR"};
+    		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", "SALIR"};
 	public static final String [] kindsOfFuture = {"FileList", "CristianFuturo"};
 
 	String claveSeleccionada = null;
 	
-	JFrame frame;
+	OldClient frame;
 	JLabel author;
 	JTextArea console;
 	public static JTextArea list;
 
-	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDClient/";
+	public static final String folderPath = GeneralUtils.getDirectory(0);
 	
 	IProxy proxy;
 	FileList fileList;
@@ -77,7 +80,7 @@ public class Client extends JFrame implements IObservadorFuturo{
 	 * @param prox = proxy del servidor con el que se conecta
 	 * @throws IOException
 	 */
-	public Client(IProxy prox) throws IOException{
+	public OldClient(IProxy prox) throws IOException{
 		
        super("Trabajo Final SSD 2014/2015 3º Grado Ing. Telemática UPCT");
        
@@ -117,10 +120,10 @@ public class Client extends JFrame implements IObservadorFuturo{
 	    PrintStream out = new PrintStream( new TextAreaOutputStream( console ) );
 
 	    // redirect standard output stream to the TextAreaOutputStream
-	    System.setOut( out );
-
-	    // redirect standard error stream to the TextAreaOutputStream
-	    System.setErr( out );
+//	    System.setOut( out );
+//
+//	    // redirect standard error stream to the TextAreaOutputStream
+//	    System.setErr( out );
     
        System.out.println("Registro del programa: \n>>");
        JScrollPane consolePane = new JScrollPane(console);
@@ -200,28 +203,26 @@ public class Client extends JFrame implements IObservadorFuturo{
 						break;
 						
 					case "MONITORIZAR Y SINCRONIZAR":
-						
-						//código de monitorización
-
-						break;
-						
-					case "DESCONECTAR":
-						
-						//es necesario solo si está monitorizando (?)
-						
-						break;
-						
+						System.out.println("Monitorizando cambios...");
+						JNotify notify = new JNotify();
+						// Hacemos observador de la carpeta al cliente, de forma que cuando suceda algún cambio, se sincronice inmediatamente
+						try {
+							notify.addWatch(folderPath, 6, false, frame);
+						} catch (JNotifyException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							System.out.println("No se ha podido establecer el observador a la carpeta sincronizada.");
+						}
+						break;						
 					case "SALIR":
 						frame.dispose();
 						System.exit(1);
 						break;
-						
 					default:
 						break;
 					}
 				}                	     	    
 			}
-		  
 		    
 	/*
 	 * Métodos de estructura Objeto Activo
@@ -247,7 +248,7 @@ public class Client extends JFrame implements IObservadorFuturo{
 			}
 			tablaFuturos.remove(r.getId());//eliminamos el futuro de la lista
 			
-			Path path = FileSystems.getDefault().getPath(Client.folderPath);//Obtiene la ruta de la carpeta local
+			Path path = FileSystems.getDefault().getPath(OldClient.folderPath);//Obtiene la ruta de la carpeta local
 			DirectoryStream<Path> list = listOfFiles(path);//toma los nombres de los archivos de la carpeta
 			
 			HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> fileList = new HashMap<>();//crea la lista de los datos de archivos del cliente
@@ -256,7 +257,7 @@ public class Client extends JFrame implements IObservadorFuturo{
 			
 			for (Iterator iterator = list.iterator(); iterator.hasNext();) {
 				Path pth = (Path) iterator.next();
-				str = Client.folderPath + pth.getFileName().toString();//extrae la ruta de cada archivo
+				str = OldClient.folderPath + pth.getFileName().toString();//extrae la ruta de cada archivo
 				valuePair = new AbstractMap.SimpleEntry<byte[], Long>(GeneralUtils.getHash(str), GeneralUtils.getLastModifiedDate(str));
 				fileList.put(pth.getFileName().toString(), valuePair);//guarda nombre, hash y hora en la lista de archivos
 			}
@@ -427,18 +428,48 @@ public class Client extends JFrame implements IObservadorFuturo{
      * Realiza las acciones necesarias después del algoritmo de cristian para sincronizar los archivos con los del servidor
      */
     public void getLists(){
-
 		proxy.getFileList(Server.folderPath, prepararFuturo(clavesVistas[0],kindsOfFuture[0], 0));//pide al servidor su lista (y descarga los necesarios)-> ver done(FileList)
 		DirectoryStream<Path> dirList = listOfFiles(FileSystems.getDefault().getPath(folderPath));//obtiene la lista del cliente
-
     }
     
-    /*
+    /**
+     * Métodos de la interfaz JNotifyManager
+     * Convertimos al cliente en obvservador de la carpeta
+     */
+	@Override
+	public void fileCreated(int arg0, String arg1, String arg2) {
+		System.out.println("Archivo creado: " + arg1 + " " + arg2);
+		System.out.println("Sincronizando...");
+		cristianPetitions();
+	}
+
+	@Override
+	public void fileDeleted(int arg0, String arg1, String arg2) {
+		System.out.println("Archivo eliminado: " + arg1 + arg2);
+		System.out.println("Sincronizando...");
+		cristianPetitions();	
+	}
+
+	@Override
+	public void fileModified(int arg0, String arg1, String arg2) {
+		System.out.println("Archivo modificado: " + arg1 + " " + arg2);
+		System.out.println("Sincronizando...");
+		cristianPetitions();	
+	}
+
+	@Override
+	public void fileRenamed(int arg0, String arg1, String arg2, String arg3) {
+		System.out.println("Archivo renombrado: " + arg1 + " " + arg2);
+		System.out.println("Sincronizando...");
+		cristianPetitions();	
+	}
+	
+	  /*
      *  Metodo main que inicia el programa
      */
     public static void main(String [] args) throws IOException{
 		ServerProxy pr = new ServerProxy();
-		Client cliente = new Client(pr);
+		OldClient cliente = new OldClient(pr);
     }
     
 }
