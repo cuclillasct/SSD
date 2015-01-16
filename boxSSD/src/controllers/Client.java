@@ -68,9 +68,14 @@ public class Client implements IObservadorFuturo, JNotifyListener{
 	 * @return void
 	 */
 	public void Sync (){
-		cristianPetitions(); //Para sincronizar empezamos por algoritmo de Cristian
-		//los métodos que se invocan como consecuencia de éste, realizan las operaciones para sincronizar
-		//tanto la hora como los archivos
+		if (cristianDone) {// Si ya se ha sincronizado mediante Cristian anteriormente
+			getLists();
+		}else {
+			cristianPetitions(); //Para sincronizar la primera vez empezamos por algoritmo de Cristian
+			//los métodos que se invocan como consecuencia de éste, realizan las operaciones para sincronizar
+			//tanto la hora como los archivos
+		}
+		
 	}
 		
 	
@@ -202,6 +207,7 @@ public class Client implements IObservadorFuturo, JNotifyListener{
     	//cuando termina el algoritmo
     	System.out.println("Finalizado con éxito el algoritmo de Cristian");
     	System.out.println("Diferencia horaria entre cliente y servidor: "+ difference);
+    	cristianDone = true;
     	getLists();//realiza las siguientes acciones: comprobación de carpetas y descarga de archivos
     }
 	
