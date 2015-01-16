@@ -49,6 +49,8 @@ import net.contentobjects.jnotify.JNotifyListener;
 public class ClientWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
+	public static final String IPServer = "192.168.1.2";
+	
 	public static final String [] 
     		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", "SALIR"};
 

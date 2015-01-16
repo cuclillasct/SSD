@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import views.ClientWindow;
 import controllers.ServerThread;
 import models.CristianFuturo;
 
@@ -29,8 +30,8 @@ public class GetCristianTime implements IMethodRequest {
 
 	@Override
 	public void execute() throws IOException {
-		Socket socket = new Socket("127.0.0.1", 52534);
-		System.out.println("Conectando con: 127.0.0.1 Puerto: 52534");
+		Socket socket = new Socket(ClientWindow.IPServer, 52534);
+		System.out.println("Conectando con: " + ClientWindow.IPServer + " Puerto: 52534");
 		try {			
 
 			//Out
