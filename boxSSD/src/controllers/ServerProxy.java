@@ -29,8 +29,8 @@ public class ServerProxy implements IProxy {
 	}
 
 	@Override
-	public void downloadFiles(ArrayList<String> futuros) {
-		for (String file : futuros) {
+	public void downloadFiles(ArrayList<String> archivos) {
+		for (String file : archivos) {
 			DownloadFile method = new DownloadFile(file);//llama al constructor de la petición
 			try {
 				method.execute();//la ejecuta
@@ -42,9 +42,9 @@ public class ServerProxy implements IProxy {
 	}
 	
 	@Override
-	public void uploadFiles(ArrayList<String> futuros) {
+	public void uploadFiles(ArrayList<String> archivos) {
 
-		for (String file : futuros) {
+		for (String file : archivos) {
 			UploadFile method = new UploadFile(file);//llama al constructor de la petición
 			try {
 				method.execute();//la ejecuta

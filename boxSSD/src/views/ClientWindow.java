@@ -1,9 +1,5 @@
 package views;
 
-import interfaces.IFuturo;
-import interfaces.IObservadorFuturo;
-import interfaces.IProxy;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -11,17 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.AbstractMap.SimpleEntry;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -34,17 +19,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 
-import utils.GeneralUtils;
 import utils.TextAreaOutputStream;
-import views.OldClient.PanelBotones;
 import controllers.Client;
-import controllers.Server;
 import controllers.ServerProxy;
-import models.CristianFuturo;
-import models.FileList;
 import net.contentobjects.jnotify.JNotify;
 import net.contentobjects.jnotify.JNotifyException;
-import net.contentobjects.jnotify.JNotifyListener;
+
 
 public class ClientWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -102,7 +82,7 @@ public class ClientWindow extends JFrame {
 
 		    // redirect standard output stream to the TextAreaOutputStream
 //		    System.setOut( out );
-	//
+	
 //		    // redirect standard error stream to the TextAreaOutputStream
 //		    System.setErr( out );
 	    

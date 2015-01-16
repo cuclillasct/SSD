@@ -17,7 +17,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.AbstractMap.SimpleEntry;
 
-import javax.swing.JLabel;
 import javax.swing.JTextArea;
 
 import utils.GeneralUtils;
@@ -39,7 +38,6 @@ public class Client implements IObservadorFuturo, JNotifyListener{
 	
 	//variables para Cristian
 	public static final int iteraciones = 5;
-	//long serversTime [] = new long[iteraciones];
 	ArrayList<Long> serversTime = new ArrayList<>();
 	long serverTimeSet;
 	long difference;//donde guardamos la diferencia entre la hora cliente y servidor
@@ -294,31 +292,37 @@ public class Client implements IObservadorFuturo, JNotifyListener{
      * Convertimos al cliente en obvservador de la carpeta
      */
 	@Override
-	public void fileCreated(int arg0, String arg1, String arg2) {
-		System.out.println("Archivo creado: " + arg1 + " " + arg2);
+	public void fileCreated(int wd, String rootPath, String name) {
+		System.out.println("Archivo creado: " + rootPath + " " + name);
 		System.out.println("Sincronizando...");
-		cristianPetitions();
+		ArrayList<String> toUpload = new ArrayList<>();
+		toUpload.add(name);
+		proxy.uploadFiles(toUpload);//lo sube al servidor
 	}
 
 	@Override
-	public void fileDeleted(int arg0, String arg1, String arg2) {
-		System.out.println("Archivo eliminado: " + arg1 + arg2);
+	public void fileDeleted(int wd, String rootPath, String name) {
+		System.out.println("Archivo eliminado: " + rootPath + name);
 		System.out.println("Sincronizando...");
-		cristianPetitions();	
+		ArrayList<String> toDownload = new ArrayList<>();
+		toDownload.add(name);
+		proxy.downloadFiles(toDownload);//lo descarga del servidor
 	}
 
 	@Override
-	public void fileModified(int arg0, String arg1, String arg2) {
-		System.out.println("Archivo modificado: " + arg1 + " " + arg2);
+	public void fileModified(int wd, String rootPath, String name) {
+		System.out.println("Archivo modificado: " + rootPath + " " + name);
 		System.out.println("Sincronizando...");
-		cristianPetitions();	
+		ArrayList<String> toUpload = new ArrayList<>();
+		toUpload.add(name);
+		proxy.uploadFiles(toUpload);//actualiza en el servidor
 	}
 
 	@Override
-	public void fileRenamed(int arg0, String arg1, String arg2, String arg3) {
-		System.out.println("Archivo renombrado: " + arg1 + " " + arg2);
+	public void fileRenamed(int wd, String rootPath, String oldName, String newName) {
+		System.out.println("Archivo renombrado: " + rootPath + " " + oldName);
 		System.out.println("Sincronizando...");
-		cristianPetitions();	
+		getLists();	//sincroniza los cambios
 	}
 	
 }
