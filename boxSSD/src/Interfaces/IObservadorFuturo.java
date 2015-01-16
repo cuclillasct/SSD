@@ -3,7 +3,6 @@ package Interfaces;
 
 /**
  * Modela a los observadores de los futuros
- * @author Juan Ángel
  *
  */
 public interface IObservadorFuturo {

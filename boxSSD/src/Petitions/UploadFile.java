@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -14,6 +13,10 @@ import Interfaces.IMethodRequest;
 import Models.DataChunk;
 import Views.Client;
 
+/**
+ * Clase modeladora de la petición 
+ * de subida de fichero
+ */
 public class UploadFile implements IMethodRequest {
 
 	String relativePath;
@@ -31,55 +34,45 @@ public class UploadFile implements IMethodRequest {
 			//InputStream de lectura
 			File file = new File(Client.folderPath + relativePath);
 			FileInputStream in = new FileInputStream(file);
-			BufferedInputStream input = new BufferedInputStream(in);
+			BufferedInputStream input = new BufferedInputStream(in);//buffer de lectura para subir
 			byte[] b; int i = 0; long sizeInBytes = file.length(), sizeInPackets = sizeInBytes/DataChunk.CHUNK_MAX_SIZE + (sizeInBytes%DataChunk.CHUNK_MAX_SIZE > 0 ? 1 : 0);
 			DataChunk chunk;
 			
 			//OutSocket
 			ObjectOutputStream outstr = new ObjectOutputStream(socket.getOutputStream());
 			
-			outstr.writeObject(ServerThread.SUBIR_FICHERO);
-			outstr.writeObject(relativePath); // "C:/Users/Jorge/Desktop\nexit");
-			outstr.writeLong(sizeInPackets);
+			outstr.writeObject(ServerThread.SUBIR_FICHERO);//petición de subir archivo
+			outstr.writeObject(relativePath); //argumento: ruta de archivo
+			outstr.writeLong(sizeInPackets); //argumento: paquetes (DataChunk) que va a recibir
 			outstr.flush();
 			
 			System.out.println("Petición enviada: Subir fichero " + relativePath);
 			
 			while (input.available() > 0) {
-				System.out.println("Quedan: " + input.available());
-				if (input.available() >= DataChunk.CHUNK_MAX_SIZE){
+				if (input.available() >= DataChunk.CHUNK_MAX_SIZE){//si quedan para llenar un paquete entero:
 					b = new byte[DataChunk.CHUNK_MAX_SIZE];
-					input.read(b, 0, b.length);
-					chunk = new DataChunk(i++, b, DataChunk.CHUNK_MAX_SIZE);
-					System.out.println("Leido localmente: " + (i-1));
-				}else{
-					b = new byte[input.available()];
+					input.read(b, 0, b.length);//lee esos bytes
+					chunk = new DataChunk(i++, b, DataChunk.CHUNK_MAX_SIZE);//crea un paquete con ellos
+				}else{//el último paquete
+					b = new byte[input.available()];//del tamaño exacto restante
 					input.read(b);
-					chunk = new DataChunk(i++, b, b.length);
-					System.out.println("Leido localmente ultimo paquete: " + (i-1));
+					chunk = new DataChunk(i++, b, b.length);//crea el paquete restante
 				}
-				System.out.println("Enviando paquetes... " + (chunk.getnOrd()+1) + " de " + sizeInPackets);
-				outstr.writeObject(chunk);
+				outstr.writeObject(chunk);//envía el paquete
 				outstr.flush();
 				chunk = null; b = null; outstr.reset(); // Liberacion de recursos
 			}
-			input.close();
-			
-			//In
-			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
+			input.close();//cierra el buffer
 			
 			System.out.println("Fichero "+ relativePath + " enviado" );
 			
-//			System.out.println("Esperando cierre de conexión con el servidor...");
-//			outstr.writeObject("exit");
-//			outstr.flush();
-//			while(!((String) instr.readObject()).equals("exit")){} //Esperamos que cierre el servidor
+			outstr.writeObject("exit");
+			outstr.flush();//cerramos la conexión
+
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Host remoto desconocido.");
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally{
 			socket.close();

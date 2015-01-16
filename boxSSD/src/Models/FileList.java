@@ -1,35 +1,42 @@
 package Models;
 
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.AbstractMap;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
 
 import Interfaces.IFuturo;
 import Interfaces.IObservadorFuturo;
 
+/**
+ * Clase que modela el futuro 
+ * (lugar donde se almacena el resultado)
+ * de una petición para obtener la lista
+ * de archivos del Servidor
+ */
 public class FileList implements IFuturo{
-
-
+	private static final long serialVersionUID = 1L;
+	
 	HashMap<String, SimpleEntry<byte[], Long>> results;//HashMap<filePath, SimpleEntry<hashCode, lastModifiedDate>>
 	boolean hecho;
 	IObservadorFuturo obs;
 	String id;	
 	
+	/*
+	 * Constructores
+	 */
 		
 	public FileList (){
 		id = new Long(Calendar.getInstance().getTimeInMillis()).toString();
-		
 	}
 	
 	public FileList (IObservadorFuturo obs){
 		attach(obs);
 	}
 
+	/*
+	 * Métodos de IFuturo
+	 */
+	
 	@Override
 	public Object getResult() {
 		return results;
@@ -58,19 +65,15 @@ public class FileList implements IFuturo{
 		return id;
 	}
 
+	/**
+	 * Incorrecto para este futuro
+	 * @see getId()
+	 * @return -1 si error
+	 */
 	@Override
 	public int getIntId() {
-		// TODO Auto-generated method stub
 		return -1;
 	}
 
-//	results = new HashMap<String, AbstractMap.SimpleEntry<Byte[],Date>>();
-//	Set claves =  results.keySet();
-//	for (Iterator iterator = claves.iterator(); iterator.hasNext();) {
-//		String filename = (String) iterator.next();
-//		AbstractMap.SimpleEntry<Byte[], Date> filedata  = results.get(filename);
-//		Byte[] hash = filedata.getKey();
-//		Date time = filedata.getValue();
-//	}
 	
 }

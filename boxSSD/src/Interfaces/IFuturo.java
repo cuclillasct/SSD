@@ -1,14 +1,11 @@
 package Interfaces;
 
-import java.io.Reader;
 import java.io.Serializable;
-import java.util.ArrayList;
+
 
 /**
  * Modela el lugar donde el servidor escribe la respuesta 
  * al servicio que posteriormente recogerá al cliente.
- * 
- *
  */
 public interface IFuturo extends Serializable{
 
@@ -35,12 +32,17 @@ public interface IFuturo extends Serializable{
 	public void setResult(Object result);
 	
 	/**
-	 * Devuelve el identificador del futuro. 
-	 * Se recomienda que cada futuro tenga un id único.
-	 * 
+	 * Devuelve el identificador del futuro en formato String
+	 *  
 	 * @return identificador del futuro.
 	 */
 	public String getId();
+	
+	/**
+	 * Devuelve el identificador del futuro en formato String
+	 *  
+	 * @return identificador del futuro.
+	 */
 	public int getIntId();
 	
 	/**

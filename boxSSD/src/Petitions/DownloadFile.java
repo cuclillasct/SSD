@@ -14,10 +14,15 @@ import Interfaces.IMethodRequest;
 import Models.DataChunk;
 import Views.Client;
 
+/**
+ * Clase modeladora de la petición 
+ * de descarga de fichero
+ */
 public class DownloadFile implements IMethodRequest {
 
 	String relativePath;
 	
+	/**constructor de la petición*/
 	public DownloadFile(String path) {
 		this.relativePath = path;
 	}
@@ -31,31 +36,29 @@ public class DownloadFile implements IMethodRequest {
 			//OutSocket
 			ObjectOutputStream outObj = new ObjectOutputStream(socket.getOutputStream());
 			
-			outObj.writeObject(ServerThread.DESCARGAR_FICHERO);
-			outObj.writeObject(relativePath); // "C:/Users/Jorge/Desktop\nexit");
+			outObj.writeObject(ServerThread.DESCARGAR_FICHERO); //envía la petición al server
+			outObj.writeObject(relativePath); // envía el argumento que necesitará (archivo a descargar)
 			outObj.flush();
 			
 			System.out.println("Petición enviada: Descargar fichero " + relativePath);
 			
 			//InSocket
-			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
+			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());//recibe respuesta
 	
 			long size = instr.readLong();
 			System.out.println("Voy a recibir un archivo con "+ size +"paquete(s)");
 
 			// Stream para escribir
 			File file = new File(Client.folderPath + relativePath);
-			FileOutputStream out = new FileOutputStream(file);
-			BufferedOutputStream outstr = new BufferedOutputStream(out);
+			FileOutputStream out = new FileOutputStream(file);//para escribir el archivo
+			BufferedOutputStream outstr = new BufferedOutputStream(out);//usamos bufferado por la memoria
 			DataChunk chunk;
 			for (int i = 0; i < size; i++) {
 				try {
-					chunk = (DataChunk) instr.readObject();
-					System.out.println("Leo chunk " + i);
-					outstr.write(chunk.getData());
+					chunk = (DataChunk) instr.readObject();//coge el paquete
+					outstr.write(chunk.getData());//y lo escribe
 					chunk = null;
 				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -65,11 +68,9 @@ public class DownloadFile implements IMethodRequest {
 			outObj.writeObject("exit");
 			outObj.flush();		
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Host remoto desconocido.");
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally{
 			socket.close();

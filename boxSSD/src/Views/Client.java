@@ -5,30 +5,18 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Array;
-import java.net.URI;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.WatchEvent.Kind;
-import java.nio.file.WatchEvent.Modifier;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.AbstractMap.SimpleEntry;
 
 import javax.swing.Box;
@@ -47,14 +35,13 @@ import Interfaces.IObservadorFuturo;
 import Controllers.Server;
 import Controllers.ServerProxy;
 import Interfaces.IProxy;
-import Models.ChunkedFile;
 import Models.CristianFuturo;
-import Models.DataChunk;
 import Models.FileList;
 import Util.GeneralUtils;
 import Util.TextAreaOutputStream;
 
 public class Client extends JFrame implements IObservadorFuturo{
+	private static final long serialVersionUID = 1L;
 	
 	public static final String [] 
     		clavesVistas = {"SINCRONIZAR", "MONITORIZAR Y SINCRONIZAR", 
@@ -84,7 +71,12 @@ public class Client extends JFrame implements IObservadorFuturo{
 	long finalTimes [] = new long [iteraciones];
 	boolean cristianDone = false;
 	
-	
+	/**
+	 * Constructor del cliente.
+	 *
+	 * @param prox = proxy del servidor con el que se conecta
+	 * @throws IOException
+	 */
 	public Client(IProxy prox) throws IOException{
 		
        super("Trabajo Final SSD 2014/2015 3º Grado Ing. Telemática UPCT");
@@ -104,7 +96,7 @@ public class Client extends JFrame implements IObservadorFuturo{
        getContentPane().add(mainBox);
        
        author = new JLabel();
-       author.setText("Jorge Mendoza Saucedo y Elena Martín Seonae ©Copyright 2015");
+       author.setText("Jorge Mendoza Saucedo y Elena Martín Seoane ©Copyright 2015");
        author.setPreferredSize(new Dimension(620,20));
 	   author.setAlignmentX(CENTER_ALIGNMENT);
 	   author.setForeground(Color.lightGray);
@@ -120,15 +112,15 @@ public class Client extends JFrame implements IObservadorFuturo{
        console.setWrapStyleWord(true);
        console.setMargin(new Insets(10, 5, 10, 5));
     
-    // Now create a new TextAreaOutputStream to write to our JTextArea control and wrap a
-    // PrintStream around it to support the println/printf methods.
-    PrintStream out = new PrintStream( new TextAreaOutputStream( console ) );
+	    // Now create a new TextAreaOutputStream to write to our JTextArea control and wrap a
+	    // PrintStream around it to support the println/printf methods.
+	    PrintStream out = new PrintStream( new TextAreaOutputStream( console ) );
 
-    // redirect standard output stream to the TextAreaOutputStream
-//       System.setOut( out );
+	    // redirect standard output stream to the TextAreaOutputStream
+	    System.setOut( out );
 
-    // redirect standard error stream to the TextAreaOutputStream
-//       System.setErr( out );
+	    // redirect standard error stream to the TextAreaOutputStream
+	    System.setErr( out );
     
        System.out.println("Registro del programa: \n>>");
        JScrollPane consolePane = new JScrollPane(console);
@@ -157,15 +149,19 @@ public class Client extends JFrame implements IObservadorFuturo{
     }
 	    
 	    /**
-		    * Clase interna: 
+		    * Clase interna: panel de botones
 		    * Utiliza layout por defecto.
 		    */
 		    class PanelBotones extends JPanel implements ActionListener{
+			private static final long serialVersionUID = 1L;
 
-		         JLabel lb;
+				JLabel lb;
 		         
 		         JButton btControl [] = new JButton[clavesVistas.length];
-		     
+		         
+		         /**
+		          * construye un panel de botones con los determinados en el array de clavesVistas
+		          */
 			     public PanelBotones(){
 			    	 
 			    	 setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -184,50 +180,58 @@ public class Client extends JFrame implements IObservadorFuturo{
  	 
 		         } 
 		         
-
+			     /**
+			      * manejadores de los botones
+			      * acciones a realizar cuando se pulsa un determinado botón
+			      */
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 
-					//Object[] opt = {1,2,3,4,5,6,7,8,9,10};
 					claveSeleccionada = arg0.getActionCommand();
 					System.out.println("Click en: " + claveSeleccionada);
+					
 					switch (claveSeleccionada) {
 					case "SINCRONIZAR":
 						System.out.println("Sincronizando...");
-						//first
-						cristianPetitions();
-						
-						//IMPORTANTE: DEBE ESPERAR A QUE TODAS LAS PETICIONES SE HAYAN CONTESTADO Y SE HAYA EJECUTADO EL ALGORITMO
-						
-						//scnd
-						proxy.getFileList(Server.folderPath, prepararFuturo(clavesVistas[0],kindsOfFuture[0], 0));
-						DirectoryStream<Path> dirList = listOfFiles(FileSystems.getDefault().getPath(folderPath));
-						System.out.println(dirList);
+						//comienza el algoritmo de Cristian
+						cristianPetitions();						
+						//los métodos que se invocan como consecuencia de éste, realizan las operaciones para sincronizar
+						//tanto la hora como los archivos
 						break;
+						
 					case "MONITORIZAR Y SINCRONIZAR":
-						//ArrayList<String> filesToDownload = filesToDownload();
-						//filesToDownload.add("prueba.txt");
-						//proxy.downloadFiles(filesToDownload);
+						
+						//código de monitorización
+
 						break;
+						
 					case "DESCONECTAR":
-						ArrayList<String> filesToUpload = new ArrayList<String>();
-						filesToUpload.add("video.mp4");
-						proxy.uploadFiles(filesToUpload);
+						
+						//es necesario solo si está monitorizando (?)
+						
 						break;
+						
 					case "SALIR":
 						frame.dispose();
 						System.exit(1);
 						break;
+						
 					default:
 						break;
 					}
 				}                	     	    
 			}
+		  
 		    
 	/*
 	 * Métodos de estructura Objeto Activo
 	 */
-		    
+		  
+	/**
+	 * Recibe los resultados de los futuros
+	 * Dependiendo del tipo de futuro realiza las acciones pertinentes
+	 * y elimina el futuro de la lista
+	 */
 	@Override
 	public void done(String idFuturo) {
 		System.out.println("Futuro recibido con exito = " + idFuturo);
@@ -235,71 +239,94 @@ public class Client extends JFrame implements IObservadorFuturo{
 		if (r == null){
 			System.out.println("Cliente: codigo de futuro desconocido");
 			
-		}else if (r instanceof FileList){ // Mostramos la lista de archivos sincronizados
+			//Si recibe una lista de archivos desde el servidor:
+		}else if (r instanceof FileList){ 
 			list.setText("Lista de archivos: \n");
-			for (String string : ((HashMap<String, AbstractMap.SimpleEntry<Byte[], Long>>) r.getResult()).keySet()) {
-				list.append(string + "\n");
+			for (String string : ((HashMap<String, AbstractMap.SimpleEntry<byte[], Long>>) r.getResult()).keySet()) {
+				list.append(string + "\n");// Mostramos la lista de archivos sincronizados
 			}
-			tablaFuturos.remove(r.getId());
+			tablaFuturos.remove(r.getId());//eliminamos el futuro de la lista
 			
-			Path path = FileSystems.getDefault().getPath(Client.folderPath);
-			System.out.println("Servidor-> " + path.toString()+"\n");
-			DirectoryStream<Path> list = listOfFiles(path);
+			Path path = FileSystems.getDefault().getPath(Client.folderPath);//Obtiene la ruta de la carpeta local
+			DirectoryStream<Path> list = listOfFiles(path);//toma los nombres de los archivos de la carpeta
 			
-			HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> fileList = new HashMap<String, AbstractMap.SimpleEntry<byte[], Long>>();
-			String str; //Long date; Byte[] hash;
+			HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> fileList = new HashMap<>();//crea la lista de los datos de archivos del cliente
+			String str; 
 			SimpleEntry<byte[], Long> valuePair;
 			
 			for (Iterator iterator = list.iterator(); iterator.hasNext();) {
 				Path pth = (Path) iterator.next();
-				str = Client.folderPath + pth.getFileName().toString();
+				str = Client.folderPath + pth.getFileName().toString();//extrae la ruta de cada archivo
 				valuePair = new AbstractMap.SimpleEntry<byte[], Long>(GeneralUtils.getHash(str), GeneralUtils.getLastModifiedDate(str));
-				fileList.put(pth.getFileName().toString(), valuePair);
+				fileList.put(pth.getFileName().toString(), valuePair);//guarda nombre, hash y hora en la lista de archivos
 			}
 			
+			//encuentra los archivos que deben ser subidos y descargados:
 			ArrayList<String> filesToDownload = filesToDownload((HashMap<String, AbstractMap.SimpleEntry<byte[], Long>>) r.getResult(), fileList);
 			ArrayList<String> filesToUpload = filesToUpload((HashMap<String, AbstractMap.SimpleEntry<byte[], Long>>) r.getResult(), fileList);
 			System.out.println("Descargando " + filesToDownload.size() + " archivos del servidor");
-			proxy.downloadFiles(filesToDownload);
-			proxy.uploadFiles(filesToUpload);
+			proxy.downloadFiles(filesToDownload);//descarga los ficheros del server
+			proxy.uploadFiles(filesToUpload);//sube al server lo necesario
 			
-		} else if(r instanceof CristianFuturo){
-			serversTime.add(r.getIntId(),(Long) r.getResult());
-			finalTimes[r.getIntId()] = System.currentTimeMillis();
-			cristianAlgorithm(r.getIntId());
-			tablaFuturos.remove(r.getId());
+			
+		} else if(r instanceof CristianFuturo){//si recibe el resultado de una petición de hora
+			
+			finalTimes[r.getIntId()] = System.currentTimeMillis();//guarda la hora de llegada del paquete
+			serversTime.add(r.getIntId(),(Long) r.getResult()); //guarda la hora que le llega de la peticion X (ID)
+			
+			if(r.getIntId() == (iteraciones-1)){
+				cristianAlgorithm();//llama a la ejecución del algoritmo si ha llegado ya la última petición 
+			}
+			tablaFuturos.remove(r.getId());//elimina el futuro correspondiente
 		}
 		else{
 			System.out.println("Cliente: formato de futuro desconocido");
 		}
 	}	    
     
-	private IFuturo prepararFuturo(String petition, String type, int argument){//elimino el ", String argument")
+	/**
+	 * Prepara los futuros para recibir los datos de una peticion
+	 * @param String petition to do
+	 * @param String type of petition
+	 * @param argument - numero de iteración del algoritmo de Cristian (ID ordenado)
+	 * @return IFuturo preparado
+	 */
+	private IFuturo prepararFuturo(String petition, String type, int argument){
 		IFuturo f = null;
-		if (petition.equals(clavesVistas[0])){
-			if(type.equals(kindsOfFuture[1])){
+		if (petition.equals(clavesVistas[0])){//si se ha pulsado en sincronizar
+			if(type.equals(kindsOfFuture[1])){//y la petición es de hora de Servidor
 				f = new CristianFuturo(argument);
-				f.attach(this);
+				f.attach(this);//prepara un futuro Cristian y se queda a la escucha
 			}
-			if(type.equals(kindsOfFuture[0])){
+			if(type.equals(kindsOfFuture[0])){//si la peticion es de lista de archivos
 				f = new FileList();
-				f.attach(this);
+				f.attach(this);//prepara y queda a la escucha
 			}
 		}else {
 			return null;
 		}
-		tablaFuturos.put(f.getId(), f);
+		tablaFuturos.put(f.getId(), f);//lo añade a la lista de futuros activos
 		return f;
 	}
+	
+	
+	
 	
 	/*********************************************************************
 	 * 
 	 * Métodos internos
 	 * 
 	 *********************************************************************/
+	
+	
+	/**
+	 * obtiene los archivos que hay en un directorio dado (cliente)
+	 * @param path
+	 * @return DirectoryStream con los archivos de ese directorio
+	 */
 	public DirectoryStream<Path> listOfFiles(Path path){
 		try {
-			return Files.newDirectoryStream(path);
+			return Files.newDirectoryStream(path);//obtiene todo lo que contiene el directorio
 		} catch (IOException e) {
 			System.out.println("Cliente-> Error al leer la lista de archivos en: " + path.toString());
 			e.printStackTrace();
@@ -307,13 +334,20 @@ public class Client extends JFrame implements IObservadorFuturo{
 		return (DirectoryStream<Path>) new ArrayList<Path>();
 	}
 
-    public ArrayList<String> filesToDownload (HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> filesInServer, HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> filesInClient){
+	/**
+	 * Determina qué archivos necesitan ser descargados desde el servidor
+	 * @param filesInServer
+	 * @param filesInClient
+	 * @return ArrayList con los nombres de los archivos a descargar
+	 */
+    public ArrayList<String> filesToDownload (HashMap<String, SimpleEntry<byte[], Long>> filesInServer, HashMap<String, SimpleEntry<byte[], Long>> filesInClient){
     	ArrayList<String> filesToDownload = new ArrayList<String>();
+    	
     	for (String file : filesInServer.keySet()) {
 			if (filesInClient.containsKey(file)) {// Si tenemos el archivo en el cliente, comprobamos
-				if (!filesInServer.get(file).getKey().equals(filesInClient.get(file).getKey())) { // Si son distintos
+				if (!Arrays.equals(filesInServer.get(file).getKey(), filesInClient.get(file).getKey())) { // Comprueba los hash y si son distintos
 					System.out.println("Archivo distinto encontrado en el servidor: " + file);
-					long clientSyncTime = filesInClient.get(file).getValue() + difference;
+					long clientSyncTime = filesInClient.get(file).getValue() + difference;//Obtiene la fecha que tendría si el cliente tuviera la misma hora
 					if (filesInServer.get(file).getValue() > clientSyncTime) { // Si se modificó después que en el cliente, lo descargamos
 						System.out.println("Archivo más actual encontrado en el servidor: " + file);
 						filesToDownload.add(file);
@@ -332,13 +366,14 @@ public class Client extends JFrame implements IObservadorFuturo{
      * @param filesInClient
      * @return files needed to upload
      */
-    public ArrayList<String> filesToUpload (HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> filesInServer, HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> filesInClient){
+    public ArrayList<String> filesToUpload (HashMap<String, SimpleEntry<byte[], Long>> filesInServer, HashMap<String, SimpleEntry<byte[], Long>> filesInClient){
     	ArrayList<String> filesToUpload = new ArrayList<String>();
+    	
     	for (String file : filesInClient.keySet()) {
 			if (filesInServer.containsKey(file)) {// Si el servidor tiene el archivo, comprobamos
-				if (!filesInClient.get(file).getKey().equals(filesInServer.get(file).getKey())) { // Si son distintos
+				if (!Arrays.equals(filesInServer.get(file).getKey(), filesInClient.get(file).getKey())) { // Si son distintos
 					System.out.println("Archivo distinto encontrado en el cliente: " + file);
-					long serverSyncTime = filesInServer.get(file).getValue() + difference;
+					long serverSyncTime = filesInServer.get(file).getValue() + difference;//toma la hora que tendría en su sistema
 					if (filesInClient.get(file).getValue() > serverSyncTime ) { // Si se modificó después que en el servidor
 						System.out.println("Archivo más actual encontrado en el cliente: " + file);
 						filesToUpload.add(file);
@@ -351,32 +386,51 @@ public class Client extends JFrame implements IObservadorFuturo{
     	return filesToUpload;
     }
     
-    public void cristianPetitions(){//cristianPetitions(int iterations) 
+    /**
+     * Realiza el número de peticiones de hora al servidor indicado en "iteraciones"
+     */
+    public void cristianPetitions(){
     	
     	for (int i = 0; i < iteraciones; i++) {
-			initialTimes[i] = System.currentTimeMillis();
+			initialTimes[i] = System.currentTimeMillis();//guarda la hora a la que realiza la petición
 			IFuturo future = prepararFuturo(clavesVistas[0],kindsOfFuture[1], i);
-			proxy.getCristianTime(future);
+			proxy.getCristianTime(future);//solicita la hora
 		}
     
     }
     
-    public void cristianAlgorithm(int number){
-    	//synchronized(cristianDone){ no se pueden sincronizar ni booleans ni ná
-	    if(number == (iteraciones-1) ){
-	    	long differences [] = new long [iteraciones];
-	    	long lessTime = Long.MAX_VALUE; int minorIter=0;
-	    	for (int i = 0; i < differences.length; i++) {
-				differences[i] = initialTimes[i] - finalTimes[i];
-				if(differences[i] < lessTime){
-					lessTime = differences[i];
-					minorIter = i;
-				}
+    /**
+     * Implementa el algoritmo de Cristian mediante el que se sincronizan cliente y servidor.
+     * Actualiza la variable difference en la que se guarda la diferencia horaria entre cliente y servidor
+     */
+    public void cristianAlgorithm(){
+    	long differences [] = new long [iteraciones];
+    	long lessTime = Long.MAX_VALUE; int minorIter=0;
+    	
+    	for (int i = 0; i < differences.length; i++) {
+			differences[i] = initialTimes[i] - finalTimes[i];//calcula el RTT
+			if(differences[i] < lessTime){//si en esta iteración ha tardado menos que en las otras
+				lessTime = differences[i];//actualiza el valor
+				minorIter = i;//guarda el número de la iteración mejor
 			}
-	    	serverTimeSet = serversTime.get(minorIter) + (lessTime/2);
-	    	difference = serverTimeSet - finalTimes[minorIter];
-	    }
-    	//}
+		}
+    	serverTimeSet = serversTime.get(minorIter) + (lessTime/2);//calcula la aproximación de la hora del servidor (en la mejor iteracion)
+    	difference = serverTimeSet - finalTimes[minorIter];//obtiene la variación respecto a la hora cliente que tenía en esa iteracion
+    
+    	//cuando termina el algoritmo
+    	System.out.println("Finalizado con éxito el algoritmo de Cristian");
+    	System.out.println("Diferencia horaria entre cliente y servidor: "+ difference);
+    	getLists();//realiza las siguientes acciones: comprobación de carpetas y descarga de archivos
+    }
+    
+    /**
+     * Realiza las acciones necesarias después del algoritmo de cristian para sincronizar los archivos con los del servidor
+     */
+    public void getLists(){
+
+		proxy.getFileList(Server.folderPath, prepararFuturo(clavesVistas[0],kindsOfFuture[0], 0));//pide al servidor su lista (y descarga los necesarios)-> ver done(FileList)
+		DirectoryStream<Path> dirList = listOfFiles(FileSystems.getDefault().getPath(folderPath));//obtiene la lista del cliente
+
     }
     
     /*

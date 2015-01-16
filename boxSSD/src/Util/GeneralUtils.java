@@ -2,17 +2,20 @@ package Util;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Date;
 
 import Models.DataChunk;
 
 public class GeneralUtils {
 	
+	/**
+	 * Método para ordenar paquetes en caso de que llegasen desordenados
+	 * @param packages
+	 * @return ArrayList ordenado
+	 */
 	public static ArrayList<DataChunk> orderPackages (ArrayList<DataChunk> packages){
 		ArrayList<DataChunk> packs = new ArrayList<DataChunk>();
 		for (int i = 0; i < packages.size(); i++) {
@@ -27,7 +30,11 @@ public class GeneralUtils {
 		return packs;
 	}
 	
-	
+	/**
+	 * Método para obtener el código hash de un archivo
+	 * @param pathFile
+	 * @return byte[] con el hash
+	 */
 	public static byte[] getHash(String pathFile){
 	    MessageDigest md = null;
 	    FileInputStream file;
@@ -57,6 +64,11 @@ public class GeneralUtils {
 	    return hashBytes;
 	}
 
+	/**
+	 * Obtiene la fecha de modificación del archivo
+	 * @param path
+	 * @return Long modification date
+	 */
 	public static Long getLastModifiedDate (String path){
 		File file = new File(path);
 		return new Long(file.lastModified());

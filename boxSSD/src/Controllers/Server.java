@@ -1,44 +1,26 @@
 
 package Controllers;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.Writer;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URI;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.WatchEvent.Kind;
-import java.nio.file.WatchEvent.Modifier;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.swing.JLabel;
-import javax.swing.JTextArea;
-import javax.swing.JTextPane;
-
-import Views.Client;
-
+/**
+ * Clase que modela al servidor
+ *
+ */
 public class Server {
 	
+	//Carpeta de archivos del servidor:
 	public static final String folderPath = System.getProperty("user.home") + "/Desktop/SSDServer/";
 	
-	// Server, crea descriptor socket y hace bind a puerto
 	boolean bool = true;
 	Socket soc = null;
 	ServerSocket ss = null;
@@ -58,11 +40,9 @@ public class Server {
 				try {
 					soc = ss.accept();// Bloquea si no hay peticiones
 					ServerThread thread = new ServerThread(soc,id++,this);
-					serverThreads.add(thread);
+					serverThreads.add(thread);//si hay una nueva petición crea un hilo para servirla
 					exec.execute(thread);
-					System.out.println("Servidor-> "+ss.toString());
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
@@ -71,20 +51,27 @@ public class Server {
 			System.out.println("Servidor-> No se ha podido establecer el servidor:");
 			e.printStackTrace();
 		}
-		// El cliente es el que cierra la conexión, esto es innecesario??
+		
 		finally {
 			try {
-				ss.close();
+				ss.close();//cierra la conexión
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				System.out.println("Servidor-> Fallo al cerrar la conexión con el cliente:");
+				System.out.println("Servidor-> Fallo al cerrar la conexión:");
 				e.printStackTrace();
 			}
 		}
 	}
 
 	
-	//Métodos internos del servidor
+	/*
+	 * Métodos internos del servidor
+	 */
+	
+	/**
+	 * Obtiene una lista con los nombres de los archivos de la carpeta local del servidor
+	 * @param path carpeta a leer
+	 * @return DirectoryStream con nombres de archivos
+	 */
 	public DirectoryStream<Path> listOfFiles(Path path){
 		try {
 			return Files.newDirectoryStream(path);

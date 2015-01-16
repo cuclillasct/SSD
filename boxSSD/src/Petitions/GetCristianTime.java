@@ -11,20 +11,20 @@ import Interfaces.IFuturo;
 import Interfaces.IMethodRequest;
 import Models.CristianFuturo;
 
+/**
+ * Modela la petición de hora
+ * necesaria para implementar el algoritmo
+ * de Cristian
+ */
 public class GetCristianTime implements IMethodRequest {
 	
 	long remoteDate;//result
-//	int petitionsNumber = 5;
 	CristianFuturo future;
 	
 	public GetCristianTime(IFuturo futuro){	
 		this.future = (CristianFuturo) futuro;
 	}
-	
-//	public GetCristianTime(int numberOfConnections, IFuturo futuro) {
-//		this.petitionsNumber = numberOfConnections;
-//		this.future = (CristianFuturo) futuro;
-//	}
+
 
 	@Override
 	public void execute() throws IOException {
@@ -35,12 +35,12 @@ public class GetCristianTime implements IMethodRequest {
 			//Out
 			ObjectOutputStream outstr = new ObjectOutputStream(socket.getOutputStream());
 			
-			outstr.writeObject(ServerThread.SINCRONIZAR);
+			outstr.writeObject(ServerThread.SINCRONIZAR);//Envía petición
 			outstr.flush();
 			System.out.println("Petición enviada: Sincronizar con Cristian");
 			
 			//In
-			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
+			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());//recibe respuesta
 			
 			remoteDate = (long) instr.readObject();
 			
@@ -48,14 +48,12 @@ public class GetCristianTime implements IMethodRequest {
 			outstr.writeObject("exit"); 
 			outstr.flush();	
 			
-			future.setResult(remoteDate);
+			future.setResult(remoteDate);//pasa la respuesta al cliente
 			
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Host remoto desconocido.");
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally{
 			socket.close();
