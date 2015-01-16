@@ -234,9 +234,10 @@ public class Client extends JFrame implements IObservadorFuturo{
 		IFuturo r = tablaFuturos.get(idFuturo);
 		if (r == null){
 			System.out.println("Cliente: codigo de futuro desconocido");
+			
 		}else if (r instanceof FileList){ // Mostramos la lista de archivos sincronizados
 			list.setText("Lista de archivos: \n");
-			for (String string : ((HashMap<String, AbstractMap.SimpleEntry<Byte[], Date>>) r.getResult()).keySet()) {
+			for (String string : ((HashMap<String, AbstractMap.SimpleEntry<Byte[], Long>>) r.getResult()).keySet()) {
 				list.append(string + "\n");
 			}
 			tablaFuturos.remove(r.getId());
@@ -245,22 +246,23 @@ public class Client extends JFrame implements IObservadorFuturo{
 			System.out.println("Servidor-> " + path.toString()+"\n");
 			DirectoryStream<Path> list = listOfFiles(path);
 			
-			HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> fileList = new HashMap<String, AbstractMap.SimpleEntry<byte[], Date>>();
-			String str; Date date; Byte[] hash;
-			SimpleEntry<byte[], Date> valuePair;
+			HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> fileList = new HashMap<String, AbstractMap.SimpleEntry<byte[], Long>>();
+			String str; //Long date; Byte[] hash;
+			SimpleEntry<byte[], Long> valuePair;
 			
 			for (Iterator iterator = list.iterator(); iterator.hasNext();) {
 				Path pth = (Path) iterator.next();
 				str = Client.folderPath + pth.getFileName().toString();
-				valuePair = new AbstractMap.SimpleEntry<byte[], Date>(GeneralUtils.getHash(str), GeneralUtils.getLastModifiedDate(str));
+				valuePair = new AbstractMap.SimpleEntry<byte[], Long>(GeneralUtils.getHash(str), GeneralUtils.getLastModifiedDate(str));
 				fileList.put(pth.getFileName().toString(), valuePair);
 			}
 			
-			ArrayList<String> filesToDownload = filesToDownload((HashMap<String, AbstractMap.SimpleEntry<byte[], Date>>) r.getResult(), fileList);
-			ArrayList<String> filesToUpload = filesToUpload((HashMap<String, AbstractMap.SimpleEntry<byte[], Date>>) r.getResult(), fileList);
+			ArrayList<String> filesToDownload = filesToDownload((HashMap<String, AbstractMap.SimpleEntry<byte[], Long>>) r.getResult(), fileList);
+			ArrayList<String> filesToUpload = filesToUpload((HashMap<String, AbstractMap.SimpleEntry<byte[], Long>>) r.getResult(), fileList);
 			System.out.println("Descargando " + filesToDownload.size() + " archivos del servidor");
 			proxy.downloadFiles(filesToDownload);
 			proxy.uploadFiles(filesToUpload);
+			
 		} else if(r instanceof CristianFuturo){
 			serversTime.add(r.getIntId(),(Long) r.getResult());
 			finalTimes[r.getIntId()] = System.currentTimeMillis();
@@ -305,37 +307,45 @@ public class Client extends JFrame implements IObservadorFuturo{
 		return (DirectoryStream<Path>) new ArrayList<Path>();
 	}
 
-    public ArrayList<String> filesToDownload (HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> filesInServer, HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> filesInClient){
+    public ArrayList<String> filesToDownload (HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> filesInServer, HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> filesInClient){
     	ArrayList<String> filesToDownload = new ArrayList<String>();
     	for (String file : filesInServer.keySet()) {
 			if (filesInClient.containsKey(file)) {// Si tenemos el archivo en el cliente, comprobamos
 				if (!filesInServer.get(file).getKey().equals(filesInClient.get(file).getKey())) { // Si son distintos
 					System.out.println("Archivo distinto encontrado en el servidor: " + file);
-					if (filesInServer.get(file).getValue().after(filesInClient.get(file).getValue())) { // Si se modificó después que en el cliente, lo descargamos
+					long clientSyncTime = filesInClient.get(file).getValue() + difference;
+					if (filesInServer.get(file).getValue() > clientSyncTime) { // Si se modificó después que en el cliente, lo descargamos
 						System.out.println("Archivo más actual encontrado en el servidor: " + file);
 						filesToDownload.add(file);
 					}
 				}
-			}else {// 
+			}else {//si no lo tenemos, necesitamos descargarlo
 				filesToDownload.add(file);
 			}
 		}
     	return filesToDownload;
     }
     
-    public ArrayList<String> filesToUpload (HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> filesInServer, HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> filesInClient){
+    /**
+     * Compara las listas de archivos de cliente y servidor y devuelve una lista con los archivos que necesitan ser subidos al Server
+     * @param filesInServer
+     * @param filesInClient
+     * @return files needed to upload
+     */
+    public ArrayList<String> filesToUpload (HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> filesInServer, HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> filesInClient){
     	ArrayList<String> filesToUpload = new ArrayList<String>();
     	for (String file : filesInClient.keySet()) {
-			if (filesInServer.containsKey(file)) {// Si el servidor tiene el archivo, comprobamos. Si no, lo subimos
+			if (filesInServer.containsKey(file)) {// Si el servidor tiene el archivo, comprobamos
 				if (!filesInClient.get(file).getKey().equals(filesInServer.get(file).getKey())) { // Si son distintos
 					System.out.println("Archivo distinto encontrado en el cliente: " + file);
-					if (filesInClient.get(file).getValue().after(filesInServer.get(file).getValue())) { // Si se modificó después que en el servidor
+					long serverSyncTime = filesInServer.get(file).getValue() + difference;
+					if (filesInClient.get(file).getValue() > serverSyncTime ) { // Si se modificó después que en el servidor
 						System.out.println("Archivo más actual encontrado en el cliente: " + file);
 						filesToUpload.add(file);
 					}
 				}
 			}else {
-				filesToUpload.add(file);
+				filesToUpload.add(file);//si no, lo subimos
 			}
 		}
     	return filesToUpload;

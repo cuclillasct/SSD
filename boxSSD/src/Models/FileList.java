@@ -15,8 +15,7 @@ import Interfaces.IObservadorFuturo;
 public class FileList implements IFuturo{
 
 
-	HashMap<String, SimpleEntry<byte[], Date>> results;//HashMap<filePath, AbstractMap.SimpleEntry<hashCode, lastModifiedDate>>
-	//FileListObject results;
+	HashMap<String, SimpleEntry<byte[], Long>> results;//HashMap<filePath, SimpleEntry<hashCode, lastModifiedDate>>
 	boolean hecho;
 	IObservadorFuturo obs;
 	String id;	
@@ -38,7 +37,7 @@ public class FileList implements IFuturo{
 	
 	@Override
 	public void setResult(Object result){
-		this.results = (HashMap<String, SimpleEntry<byte[], Date>>) result;
+		this.results = (HashMap<String, SimpleEntry<byte[], Long>>) result;
 		hecho = true;
 		if (obs != null) obs.done(id);
 	}

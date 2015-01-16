@@ -54,7 +54,7 @@ public class GetFileList implements IMethodRequest {
 			ObjectInputStream instr = new ObjectInputStream(socket.getInputStream());
 			
 			String str;
-			HashMap<String, AbstractMap.SimpleEntry<Byte[], Date>> result = (HashMap<String, AbstractMap.SimpleEntry<Byte[], Date>>) instr.readObject();
+			HashMap<String, AbstractMap.SimpleEntry<Byte[], Long>> result = (HashMap<String, AbstractMap.SimpleEntry<Byte[], Long>>) instr.readObject();
 			fileList.setResult(result);
 			
 			System.out.println("Cerrando conexión con el servidor...");

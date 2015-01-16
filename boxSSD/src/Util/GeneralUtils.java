@@ -57,8 +57,8 @@ public class GeneralUtils {
 	    return hashBytes;
 	}
 
-	public static Date getLastModifiedDate (String path){
+	public static Long getLastModifiedDate (String path){
 		File file = new File(path);
-		return new Date(file.lastModified());
+		return new Long(file.lastModified());
 	}
 }

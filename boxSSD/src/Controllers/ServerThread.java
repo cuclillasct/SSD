@@ -96,14 +96,14 @@ public class ServerThread implements Runnable{
 		
 		ObjectOutputStream outstr = new ObjectOutputStream(soc.getOutputStream());
 		
-		HashMap<String, AbstractMap.SimpleEntry<byte[], Date>> fileList = new HashMap<String, AbstractMap.SimpleEntry<byte[], Date>>();
-		String str; Date date; Byte[] hash;
-		SimpleEntry<byte[], Date> valuePair;
+		HashMap<String, AbstractMap.SimpleEntry<byte[], Long>> fileList = new HashMap<String, AbstractMap.SimpleEntry<byte[], Long>>();
+		String str;// Long date; Byte[] hash;
+		SimpleEntry<byte[], Long> valuePair;
 		
 		for (Iterator iterator = list.iterator(); iterator.hasNext();) {
 			Path pth = (Path) iterator.next();
 			str = Server.folderPath + pth.getFileName().toString();
-			valuePair = new AbstractMap.SimpleEntry<byte[], Date>(GeneralUtils.getHash(str), GeneralUtils.getLastModifiedDate(str));
+			valuePair = new AbstractMap.SimpleEntry<byte[], Long>(GeneralUtils.getHash(str), GeneralUtils.getLastModifiedDate(str));
 			fileList.put(pth.getFileName().toString(), valuePair);
 			System.out.println("Servidor-> "+ pth.getFileName().toString());
 //			outstr.reset(); // Liberacion de recursos
